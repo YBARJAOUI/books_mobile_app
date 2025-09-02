@@ -50,10 +50,10 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget> {
       decoration: BoxDecoration(
         color:
             _isChecking
-                ? Colors.orange.withOpacity(0.1)
+                ? Colors.orange.withValues(alpha: 0.1)
                 : _isConnected
-                ? Colors.green.withOpacity(0.1)
-                : Colors.red.withOpacity(0.1),
+                ? Colors.green.withValues(alpha: 0.1)
+                : Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color:

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/customer.dart';
 import '../services/customer_service.dart';
-import 'customer_form_screen.dart';
+import '../utils/responsive_layout.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -143,6 +144,14 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   void _showCustomerDetails(Customer customer) {
+    if (ResponsiveLayout.isMobile(context)) {
+      _showMobileCustomerDetails(customer);
+    } else {
+      _showDesktopCustomerDialog(customer);
+    }
+  }
+
+  void _showMobileCustomerDetails(Customer customer) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -171,161 +180,143 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       child: SingleChildScrollView(
                         controller: scrollController,
                         padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor:
-                                      customer.isActive
-                                          ? Colors.green
-                                          : Colors.grey,
-                                  child: Text(
-                                    customer.firstName.isNotEmpty
-                                        ? customer.firstName[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 24,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        customer.fullName,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.headlineSmall?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              customer.isActive
-                                                  ? Colors.green
-                                                  : Colors.grey,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          customer.isActive
-                                              ? 'Actif'
-                                              : 'Inactif',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            _buildDetailItem(
-                              Icons.email,
-                              'Email',
-                              customer.email,
-                            ),
-                            _buildDetailItem(
-                              Icons.phone,
-                              'Téléphone',
-                              customer.phoneNumber,
-                            ),
-                            _buildDetailItem(
-                              Icons.location_on,
-                              'Adresse',
-                              customer.address,
-                            ),
-                            if (customer.city != null)
-                              _buildDetailItem(
-                                Icons.location_city,
-                                'Ville',
-                                customer.city!,
-                              ),
-                            if (customer.postalCode != null)
-                              _buildDetailItem(
-                                Icons.local_post_office,
-                                'Code postal',
-                                customer.postalCode!,
-                              ),
-                            if (customer.country != null)
-                              _buildDetailItem(
-                                Icons.flag,
-                                'Pays',
-                                customer.country!,
-                              ),
-                            if (customer.createdAt != null)
-                              _buildDetailItem(
-                                Icons.calendar_today,
-                                'Créé le',
-                                '${customer.createdAt!.day}/${customer.createdAt!.month}/${customer.createdAt!.year}',
-                              ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () async {
-                                      Navigator.pop(context);
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => CustomerFormScreen(
-                                                customer: customer,
-                                              ),
-                                        ),
-                                      );
-                                      if (result == true) {
-                                        _loadCustomers();
-                                      }
-                                    },
-                                    icon: const Icon(Icons.edit),
-                                    label: const Text('Modifier'),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _deleteCustomer(customer.id!);
-                                    },
-                                    icon: const Icon(Icons.delete),
-                                    label: const Text('Supprimer'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                        child: _buildCustomerDetailsContent(customer),
                       ),
                     ),
                   ],
                 ),
           ),
+    );
+  }
+
+  void _showDesktopCustomerDialog(Customer customer) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              width: 500,
+              padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(
+                child: _buildCustomerDetailsContent(customer),
+              ),
+            ),
+          ),
+    );
+  }
+
+  Widget _buildCustomerDetailsContent(Customer customer) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: customer.isActive ? Colors.green : Colors.grey,
+              child: Text(
+                customer.firstName.isNotEmpty
+                    ? customer.firstName[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    customer.fullName,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: customer.isActive ? Colors.green : Colors.grey,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      customer.isActive ? 'Actif' : 'Inactif',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _buildDetailItem(Icons.email, 'Email', customer.email),
+        _buildDetailItem(Icons.phone, 'Téléphone', customer.phoneNumber),
+        _buildDetailItem(Icons.location_on, 'Adresse', customer.address),
+        if (customer.city != null)
+          _buildDetailItem(Icons.location_city, 'Ville', customer.city!),
+        if (customer.postalCode != null)
+          _buildDetailItem(
+            Icons.local_post_office,
+            'Code postal',
+            customer.postalCode!,
+          ),
+        if (customer.country != null)
+          _buildDetailItem(Icons.flag, 'Pays', customer.country!),
+        if (customer.createdAt != null)
+          _buildDetailItem(
+            Icons.calendar_today,
+            'Créé le',
+            '${customer.createdAt!.day}/${customer.createdAt!.month}/${customer.createdAt!.year}',
+          ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  context.go(
+                    '/customers/edit/${customer.id}',
+                    extra: customer.toJson(),
+                  );
+                },
+                icon: const Icon(Icons.edit),
+                label: const Text('Modifier'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deleteCustomer(customer.id!);
+                },
+                icon: const Icon(Icons.delete),
+                label: const Text('Supprimer'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -371,368 +362,155 @@ class _CustomersScreenState extends State<CustomersScreen> {
     final inactiveCustomers = customers.length - activeCustomers;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestion des Clients'),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            onPressed: _loadCustomers,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
-          ),
-        ],
-      ),
+      appBar:
+          ResponsiveLayout.isMobile(context)
+              ? AppBar(
+                title: const Text('Gestion des Clients'),
+                automaticallyImplyLeading: false,
+                actions: [
+                  IconButton(
+                    onPressed: _loadCustomers,
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Actualiser',
+                  ),
+                ],
+              )
+              : null,
       body: Column(
         children: [
-          // En-tête avec statistiques
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        'Total',
-                        customers.length.toString(),
-                        Colors.blue,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        'Actifs',
-                        activeCustomers.toString(),
-                        Colors.green,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        'Inactifs',
-                        inactiveCustomers.toString(),
-                        Colors.orange,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+          _buildHeaderSection(activeCustomers, inactiveCustomers),
+          Expanded(child: _buildCustomersContent()),
+        ],
+      ),
+      floatingActionButton:
+          ResponsiveLayout.isMobile(context)
+              ? FloatingActionButton(
+                onPressed: () => context.go('/customers/new'),
+                child: const Icon(Icons.add),
+              )
+              : null,
+    );
+  }
 
-                // Barre de recherche et filtres
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Rechercher par nom, email ou téléphone...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value;
-                            _applyFilters();
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    FilterChip(
-                      label: const Text('Actifs uniquement'),
-                      selected: showActiveOnly,
-                      onSelected: (selected) {
-                        setState(() {
-                          showActiveOnly = selected;
-                          _applyFilters();
-                        });
-                      },
-                      backgroundColor: Colors.white,
-                      selectedColor: Colors.green.withOpacity(0.2),
-                      checkmarkColor: Colors.green,
-                    ),
-                  ],
+  Widget _buildHeaderSection(int activeCustomers, int inactiveCustomers) {
+    return Container(
+      padding: ResponsiveSpacing.getAllPadding(context),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius:
+            ResponsiveLayout.isMobile(context)
+                ? null
+                : const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
                 ),
-                const SizedBox(height: 12),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${filteredCustomers.length} client(s) affiché(s)',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CustomerFormScreen(),
-                          ),
-                        );
-                        if (result == true) {
-                          _loadCustomers();
-                        }
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Nouveau Client'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      ),
+      child: Column(
+        children: [
+          ResponsiveLayout(
+            mobile: _buildMobileStats(activeCustomers, inactiveCustomers),
+            tablet: _buildDesktopStats(activeCustomers, inactiveCustomers),
+            desktop: _buildDesktopStats(activeCustomers, inactiveCustomers),
           ),
-
-          // Liste des clients
-          Expanded(
-            child:
-                isLoading
-                    ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Chargement des clients...'),
-                        ],
-                      ),
-                    )
-                    : filteredCustomers.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people_outlined,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            searchQuery.isNotEmpty || showActiveOnly
-                                ? 'Aucun client trouvé avec ces critères'
-                                : 'Aucun client enregistré',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                          const SizedBox(height: 8),
-                          if (searchQuery.isEmpty && !showActiveOnly)
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => const CustomerFormScreen(),
-                                  ),
-                                );
-                                if (result == true) {
-                                  _loadCustomers();
-                                }
-                              },
-                              icon: const Icon(Icons.add),
-                              label: const Text('Créer le premier client'),
-                            ),
-                        ],
-                      ),
-                    )
-                    : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: filteredCustomers.length,
-                      itemBuilder: (context, index) {
-                        final customer = filteredCustomers[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  customer.isActive
-                                      ? Colors.green
-                                      : Colors.grey,
-                              child: Text(
-                                customer.firstName.isNotEmpty
-                                    ? customer.firstName[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              customer.fullName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.email,
-                                      size: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        customer.email,
-                                        style: TextStyle(
-                                          color: Colors.grey[700],
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.phone,
-                                      size: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      customer.phoneNumber,
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        customer.isActive
-                                            ? Colors.green
-                                            : Colors.grey,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    customer.isActive ? 'Actif' : 'Inactif',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: PopupMenuButton(
-                              itemBuilder:
-                                  (context) => [
-                                    const PopupMenuItem(
-                                      value: 'view',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.visibility),
-                                          SizedBox(width: 8),
-                                          Text('Voir détails'),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.edit),
-                                          SizedBox(width: 8),
-                                          Text('Modifier'),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'Supprimer',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                              onSelected: (value) async {
-                                switch (value) {
-                                  case 'view':
-                                    _showCustomerDetails(customer);
-                                    break;
-                                  case 'edit':
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => CustomerFormScreen(
-                                              customer: customer,
-                                            ),
-                                      ),
-                                    );
-                                    if (result == true) {
-                                      _loadCustomers();
-                                    }
-                                    break;
-                                  case 'delete':
-                                    _deleteCustomer(customer.id!);
-                                    break;
-                                }
-                              },
-                            ),
-                            onTap: () => _showCustomerDetails(customer),
-                          ),
-                        );
-                      },
-                    ),
+          SizedBox(height: ResponsiveSpacing.md),
+          ResponsiveLayout(
+            mobile: _buildMobileFilters(),
+            tablet: _buildDesktopFilters(),
+            desktop: _buildDesktopFilters(),
           ),
+          SizedBox(height: ResponsiveSpacing.sm),
+          _buildStatsAndActions(),
         ],
       ),
     );
   }
 
+  Widget _buildMobileStats(int activeCustomers, int inactiveCustomers) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'Total',
+                customers.length.toString(),
+                Colors.blue,
+              ),
+            ),
+            SizedBox(width: ResponsiveSpacing.sm),
+            Expanded(
+              child: _buildStatCard(
+                'Actifs',
+                activeCustomers.toString(),
+                Colors.green,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: ResponsiveSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'Inactifs',
+                inactiveCustomers.toString(),
+                Colors.orange,
+              ),
+            ),
+            const Expanded(child: SizedBox()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopStats(int activeCustomers, int inactiveCustomers) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            'Total',
+            customers.length.toString(),
+            Colors.blue,
+          ),
+        ),
+        SizedBox(width: ResponsiveSpacing.sm),
+        Expanded(
+          child: _buildStatCard(
+            'Actifs',
+            activeCustomers.toString(),
+            Colors.green,
+          ),
+        ),
+        SizedBox(width: ResponsiveSpacing.sm),
+        Expanded(
+          child: _buildStatCard(
+            'Inactifs',
+            inactiveCustomers.toString(),
+            Colors.orange,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildStatCard(String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: EdgeInsets.symmetric(
+        vertical: ResponsiveSpacing.sm,
+        horizontal: ResponsiveSpacing.md,
+      ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: ResponsiveLayout.isMobile(context) ? 20 : 24,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -747,6 +525,404 @@ class _CustomersScreenState extends State<CustomersScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileFilters() {
+    return Column(
+      children: [
+        TextField(
+          decoration: InputDecoration(
+            hintText: 'Rechercher par nom, email ou téléphone...',
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value;
+              _applyFilters();
+            });
+          },
+        ),
+        SizedBox(height: ResponsiveSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: FilterChip(
+                label: const Text('Actifs uniquement'),
+                selected: showActiveOnly,
+                onSelected: (selected) {
+                  setState(() {
+                    showActiveOnly = selected;
+                    _applyFilters();
+                  });
+                },
+                backgroundColor: Colors.white,
+                selectedColor: Colors.green.withValues(alpha: 0.2),
+                checkmarkColor: Colors.green,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopFilters() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Rechercher par nom, email ou téléphone...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            onChanged: (value) {
+              setState(() {
+                searchQuery = value;
+                _applyFilters();
+              });
+            },
+          ),
+        ),
+        SizedBox(width: ResponsiveSpacing.md),
+        FilterChip(
+          label: const Text('Actifs uniquement'),
+          selected: showActiveOnly,
+          onSelected: (selected) {
+            setState(() {
+              showActiveOnly = selected;
+              _applyFilters();
+            });
+          },
+          backgroundColor: Colors.white,
+          selectedColor: Colors.green.withValues(alpha: 0.2),
+          checkmarkColor: Colors.green,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsAndActions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '${filteredCustomers.length} client(s) affiché(s)',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+        ),
+        if (!ResponsiveLayout.isMobile(context))
+          ElevatedButton.icon(
+            onPressed: () => context.go('/customers/new'),
+            icon: const Icon(Icons.add),
+            label: const Text('Nouveau Client'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCustomersContent() {
+    if (isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Chargement des clients...'),
+          ],
+        ),
+      );
+    }
+
+    if (filteredCustomers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              searchQuery.isNotEmpty || showActiveOnly
+                  ? 'Aucun client trouvé avec ces critères'
+                  : 'Aucun client enregistré',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+            if (searchQuery.isEmpty && !showActiveOnly)
+              ElevatedButton.icon(
+                onPressed: () => context.go('/customers/new'),
+                icon: const Icon(Icons.add),
+                label: const Text('Créer le premier client'),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return ResponsiveLayout(
+      mobile: _buildCustomersList(),
+      tablet: _buildCustomersGrid(2),
+      desktop: _buildCustomersGrid(ResponsiveLayout.getGridColumns(context)),
+    );
+  }
+
+  Widget _buildCustomersList() {
+    return ListView.builder(
+      padding: ResponsiveSpacing.getAllPadding(context),
+      itemCount: filteredCustomers.length,
+      itemBuilder: (context, index) {
+        final customer = filteredCustomers[index];
+        return Card(
+          margin: EdgeInsets.only(bottom: ResponsiveSpacing.sm),
+          child: ListTile(
+            contentPadding: EdgeInsets.all(ResponsiveSpacing.md),
+            leading: CircleAvatar(
+              backgroundColor: customer.isActive ? Colors.green : Colors.grey,
+              child: Text(
+                customer.firstName.isNotEmpty
+                    ? customer.firstName[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            title: Text(
+              customer.fullName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.email, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        customer.email,
+                        style: TextStyle(color: Colors.grey[700]),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(Icons.phone, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      customer.phoneNumber,
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: customer.isActive ? Colors.green : Colors.grey,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    customer.isActive ? 'Actif' : 'Inactif',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            trailing: PopupMenuButton(
+              itemBuilder:
+                  (context) => [
+                    const PopupMenuItem(
+                      value: 'view',
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility),
+                          SizedBox(width: 8),
+                          Text('Voir détails'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit),
+                          SizedBox(width: 8),
+                          Text('Modifier'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text(
+                            'Supprimer',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+              onSelected: (value) async {
+                switch (value) {
+                  case 'view':
+                    _showCustomerDetails(customer);
+                    break;
+                  case 'edit':
+                    context.go(
+                      '/customers/edit/${customer.id}',
+                      extra: customer.toJson(),
+                    );
+                    break;
+                  case 'delete':
+                    _deleteCustomer(customer.id!);
+                    break;
+                }
+              },
+            ),
+            onTap: () => _showCustomerDetails(customer),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCustomersGrid(int columns) {
+    return GridView.builder(
+      padding: ResponsiveSpacing.getAllPadding(context),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        childAspectRatio: 1.2,
+        crossAxisSpacing: ResponsiveSpacing.md,
+        mainAxisSpacing: ResponsiveSpacing.md,
+      ),
+      itemCount: filteredCustomers.length,
+      itemBuilder: (context, index) {
+        final customer = filteredCustomers[index];
+        return Card(
+          child: InkWell(
+            onTap: () => _showCustomerDetails(customer),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: EdgeInsets.all(ResponsiveSpacing.md),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor:
+                        customer.isActive ? Colors.green : Colors.grey,
+                    child: Text(
+                      customer.firstName.isNotEmpty
+                          ? customer.firstName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: ResponsiveSpacing.sm),
+                  Text(
+                    customer.fullName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: ResponsiveSpacing.xs),
+                  Text(
+                    customer.email,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: ResponsiveSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: customer.isActive ? Colors.green : Colors.grey,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      customer.isActive ? 'Actif' : 'Inactif',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        onPressed:
+                            () => context.go(
+                              '/customers/edit/${customer.id}',
+                              extra: customer.toJson(),
+                            ),
+                        icon: const Icon(Icons.edit, size: 18),
+                        tooltip: 'Modifier',
+                      ),
+                      IconButton(
+                        onPressed: () => _deleteCustomer(customer.id!),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                          size: 18,
+                        ),
+                        tooltip: 'Supprimer',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

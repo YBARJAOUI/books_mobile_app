@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/book.dart';
 import '../services/book_service.dart';
-import 'book_form_screen.dart';
+import '../utils/responsive_layout.dart';
 
 class BooksScreen extends StatefulWidget {
   const BooksScreen({super.key});
@@ -137,188 +138,254 @@ class _BooksScreenState extends State<BooksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestion des Livres'),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            onPressed: _loadBooks,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Actualiser',
-          ),
-        ],
-      ),
+      appBar:
+          ResponsiveLayout.isMobile(context)
+              ? AppBar(
+                title: const Text('Gestion des Livres'),
+                automaticallyImplyLeading: false,
+                actions: [
+                  IconButton(
+                    onPressed: _loadBooks,
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Actualiser',
+                  ),
+                ],
+              )
+              : null,
       body: Column(
         children: [
-          // Barre de recherche et filtres
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Rechercher par titre, auteur ou ISBN...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value;
-                            _applyFilters();
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 2,
-                      child: DropdownButtonFormField<String>(
-                        value: selectedCategory,
-                        decoration: InputDecoration(
-                          labelText: 'Catégorie',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        items:
-                            categories.map((category) {
-                              return DropdownMenuItem(
-                                value: category,
-                                child: Text(category),
-                              );
-                            }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedCategory = value!;
-                            _applyFilters();
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${filteredBooks.length} livre(s) trouvé(s)',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const BookFormScreen(),
-                          ),
-                        );
-                        if (result == true) {
-                          _loadBooks();
-                        }
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Nouveau Livre'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Liste des livres
-          Expanded(
-            child:
-                isLoading
-                    ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Chargement des livres...'),
-                        ],
-                      ),
-                    )
-                    : filteredBooks.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.book_outlined,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            searchQuery.isNotEmpty || selectedCategory != 'Tous'
-                                ? 'Aucun livre trouvé avec ces critères'
-                                : 'Aucun livre disponible',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    )
-                    : LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Affichage en grille pour les écrans larges
-                        if (constraints.maxWidth >= 800) {
-                          return GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount:
-                                      constraints.maxWidth >= 1200 ? 3 : 2,
-                                  childAspectRatio: 0.75,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                ),
-                            itemCount: filteredBooks.length,
-                            itemBuilder: (context, index) {
-                              return _buildBookCard(filteredBooks[index]);
-                            },
-                          );
-                        }
-                        // Affichage en liste pour les écrans petits
-                        else {
-                          return ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: filteredBooks.length,
-                            itemBuilder: (context, index) {
-                              return _buildBookListTile(filteredBooks[index]);
-                            },
-                          );
-                        }
-                      },
-                    ),
-          ),
+          _buildFiltersSection(),
+          Expanded(child: _buildBooksContent()),
         ],
       ),
+      floatingActionButton:
+          ResponsiveLayout.isMobile(context)
+              ? FloatingActionButton(
+                onPressed: () => context.go('/books/new'),
+                child: const Icon(Icons.add),
+              )
+              : null,
+    );
+  }
+
+  Widget _buildFiltersSection() {
+    return Container(
+      padding: ResponsiveSpacing.getAllPadding(context),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius:
+            ResponsiveLayout.isMobile(context)
+                ? null
+                : const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+      ),
+      child: Column(
+        children: [
+          ResponsiveLayout(
+            mobile: _buildMobileFilters(),
+            tablet: _buildDesktopFilters(),
+            desktop: _buildDesktopFilters(),
+          ),
+          SizedBox(height: ResponsiveSpacing.md),
+          _buildStatsAndActions(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileFilters() {
+    return Column(
+      children: [
+        TextField(
+          decoration: InputDecoration(
+            hintText: 'Rechercher par titre, auteur ou ISBN...',
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value;
+              _applyFilters();
+            });
+          },
+        ),
+        SizedBox(height: ResponsiveSpacing.md),
+        DropdownButtonFormField<String>(
+          value: selectedCategory,
+          decoration: InputDecoration(
+            labelText: 'Catégorie',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          items:
+              categories.map((category) {
+                return DropdownMenuItem(value: category, child: Text(category));
+              }).toList(),
+          onChanged: (value) {
+            setState(() {
+              selectedCategory = value!;
+              _applyFilters();
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopFilters() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Rechercher par titre, auteur ou ISBN...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            onChanged: (value) {
+              setState(() {
+                searchQuery = value;
+                _applyFilters();
+              });
+            },
+          ),
+        ),
+        SizedBox(width: ResponsiveSpacing.md),
+        Expanded(
+          flex: 1,
+          child: DropdownButtonFormField<String>(
+            value: selectedCategory,
+            decoration: InputDecoration(
+              labelText: 'Catégorie',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            items:
+                categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedCategory = value!;
+                _applyFilters();
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsAndActions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '${filteredBooks.length} livre(s) trouvé(s)',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+        ),
+        if (!ResponsiveLayout.isMobile(context))
+          ElevatedButton.icon(
+            onPressed: () => context.go('/books/new'),
+            icon: const Icon(Icons.add),
+            label: const Text('Nouveau Livre'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBooksContent() {
+    if (isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Chargement des livres...'),
+          ],
+        ),
+      );
+    }
+
+    if (filteredBooks.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.book_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              searchQuery.isNotEmpty || selectedCategory != 'Tous'
+                  ? 'Aucun livre trouvé avec ces critères'
+                  : 'Aucun livre disponible',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => context.go('/books/new'),
+              icon: const Icon(Icons.add),
+              label: const Text('Ajouter le premier livre'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ResponsiveLayout(
+      mobile: _buildBooksList(),
+      tablet: _buildBooksGrid(2),
+      desktop: _buildBooksGrid(ResponsiveLayout.getGridColumns(context)),
+    );
+  }
+
+  Widget _buildBooksList() {
+    return ListView.builder(
+      padding: ResponsiveSpacing.getAllPadding(context),
+      itemCount: filteredBooks.length,
+      itemBuilder: (context, index) {
+        return _buildBookListTile(filteredBooks[index]);
+      },
+    );
+  }
+
+  Widget _buildBooksGrid(int columns) {
+    return GridView.builder(
+      padding: ResponsiveSpacing.getAllPadding(context),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: ResponsiveSpacing.md,
+        mainAxisSpacing: ResponsiveSpacing.md,
+      ),
+      itemCount: filteredBooks.length,
+      itemBuilder: (context, index) {
+        return _buildBookCard(filteredBooks[index]);
+      },
     );
   }
 
@@ -348,7 +415,7 @@ class _BooksScreenState extends State<BooksScreen> {
           Expanded(
             flex: 2,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(ResponsiveSpacing.sm),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -365,14 +432,14 @@ class _BooksScreenState extends State<BooksScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: ResponsiveSpacing.xs),
                       Text(
                         book.author,
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: ResponsiveSpacing.xs),
                       Text(
                         '${book.price.toStringAsFixed(2)} €',
                         style: const TextStyle(
@@ -387,17 +454,11 @@ class _BooksScreenState extends State<BooksScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        onPressed: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BookFormScreen(book: book),
+                        onPressed:
+                            () => context.go(
+                              '/books/edit/${book.id}',
+                              extra: book.toJson(),
                             ),
-                          );
-                          if (result == true) {
-                            _loadBooks();
-                          }
-                        },
                         icon: const Icon(Icons.edit, size: 20),
                         tooltip: 'Modifier',
                       ),
@@ -423,7 +484,7 @@ class _BooksScreenState extends State<BooksScreen> {
 
   Widget _buildBookListTile(Book book) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: ResponsiveSpacing.sm),
       child: ListTile(
         leading: Container(
           width: 50,
@@ -483,17 +544,11 @@ class _BooksScreenState extends State<BooksScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BookFormScreen(book: book),
+              onPressed:
+                  () => context.go(
+                    '/books/edit/${book.id}',
+                    extra: book.toJson(),
                   ),
-                );
-                if (result == true) {
-                  _loadBooks();
-                }
-              },
               icon: const Icon(Icons.edit),
               tooltip: 'Modifier',
             ),

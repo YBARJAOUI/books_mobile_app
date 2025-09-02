@@ -230,7 +230,7 @@ class ApiService {
   }
 
   static void _logRequest(String method, String endpoint, int statusCode) {
-    print('[$method] $baseUrl$endpoint -> $statusCode');
+    // Debug log: [$method] $baseUrl$endpoint -> $statusCode
   }
 
   // Méthode pour tester la connexion

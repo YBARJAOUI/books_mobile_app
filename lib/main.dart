@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'screens/home_screen.dart';
+import 'config/router_config.dart';
 
 void main() {
   runApp(const BookstoreBackofficeApp());
@@ -10,11 +10,11 @@ void main() {
 class AppStateProvider extends ChangeNotifier {
   bool _isLoading = false;
   String _currentUser = 'Admin';
-  int _selectedNavIndex = 0;
+  String _selectedNavLocation = '/dashboard';
 
   bool get isLoading => _isLoading;
   String get currentUser => _currentUser;
-  int get selectedNavIndex => _selectedNavIndex;
+  String get selectedNavLocation => _selectedNavLocation;
 
   void setLoading(bool loading) {
     _isLoading = loading;
@@ -26,8 +26,8 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedNavIndex(int index) {
-    _selectedNavIndex = index;
+  void setSelectedNavLocation(String location) {
+    _selectedNavLocation = location;
     notifyListeners();
   }
 }
@@ -39,7 +39,7 @@ class BookstoreBackofficeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => AppStateProvider())],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'Bookstore Backoffice',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
@@ -76,7 +76,7 @@ class BookstoreBackofficeApp extends StatelessWidget {
             ),
           ),
         ),
-        home: const HomeScreen(),
+        routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
       ),
     );
