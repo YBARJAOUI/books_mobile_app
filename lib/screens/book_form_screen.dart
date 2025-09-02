@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/book.dart';
 import '../services/book_service.dart';
 
@@ -21,7 +22,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
   final _stockController = TextEditingController();
 
   String _selectedLanguage = 'francais';
-  String _selectedCategory = '';
+  String _selectedCategory = 'Fiction';
   bool _isAvailable = true;
   bool _isLoading = false;
 
@@ -53,9 +54,6 @@ class _BookFormScreenState extends State<BookFormScreen> {
       _selectedCategory = widget.book!.category;
       _isAvailable = widget.book!.isAvailable;
     }
-    if (_selectedCategory.isEmpty && _categories.isNotEmpty) {
-      _selectedCategory = _categories.first;
-    }
   }
 
   @override
@@ -84,9 +82,10 @@ class _BookFormScreenState extends State<BookFormScreen> {
         title: _titleController.text.trim(),
         author: _authorController.text.trim(),
         isbn: _isbnController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
-            : _descriptionController.text.trim(),
+        description:
+            _descriptionController.text.trim().isEmpty
+                ? null
+                : _descriptionController.text.trim(),
         price: double.parse(_priceController.text.trim()),
         stock: int.parse(_stockController.text.trim()),
         language: _selectedLanguage,
@@ -105,17 +104,18 @@ class _BookFormScreenState extends State<BookFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.book == null 
+              widget.book == null
                   ? 'Livre créé avec succès'
                   : 'Livre modifié avec succès',
             ),
+            backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -129,20 +129,32 @@ class _BookFormScreenState extends State<BookFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.book == null ? 'Nouveau Livre' : 'Modifier le Livre'),
+        title: Text(
+          widget.book == null ? 'Nouveau Livre' : 'Modifier le Livre',
+        ),
         actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _saveBook,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    'Enregistrer',
-                    style: TextStyle(color: Colors.white),
-                  ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton.icon(
+              onPressed: _isLoading ? null : _saveBook,
+              icon:
+                  _isLoading
+                      ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                      : const Icon(Icons.save, color: Colors.white),
+              label: Text(
+                _isLoading ? 'Enregistrement...' : 'Enregistrer',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         ],
       ),
@@ -153,11 +165,62 @@ class _BookFormScreenState extends State<BookFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // En-tête avec icône
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.book,
+                      size: 32,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.book == null
+                                ? 'Créer un nouveau livre'
+                                : 'Modifier le livre',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Remplissez les informations du livre',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Informations principales
+              Text(
+                'Informations principales',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
                   labelText: 'Titre *',
-                  border: OutlineInputBorder(),
+                  hintText: 'Entrez le titre du livre',
+                  prefixIcon: Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -168,13 +231,16 @@ class _BookFormScreenState extends State<BookFormScreen> {
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _authorController,
                 decoration: const InputDecoration(
                   labelText: 'Auteur *',
-                  border: OutlineInputBorder(),
+                  hintText: 'Entrez le nom de l\'auteur',
+                  prefixIcon: Icon(Icons.person),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -185,31 +251,57 @@ class _BookFormScreenState extends State<BookFormScreen> {
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _isbnController,
                 decoration: const InputDecoration(
                   labelText: 'ISBN *',
-                  border: OutlineInputBorder(),
+                  hintText: 'Entrez l\'ISBN du livre',
+                  prefixIcon: Icon(Icons.numbers),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'L\'ISBN est requis';
                   }
+                  // Validation basique de l'ISBN
+                  final cleanIsbn = value
+                      .replaceAll('-', '')
+                      .replaceAll(' ', '');
+                  if (cleanIsbn.length != 10 && cleanIsbn.length != 13) {
+                    return 'L\'ISBN doit contenir 10 ou 13 chiffres';
+                  }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Description',
-                  border: OutlineInputBorder(),
+                  hintText: 'Décrivez le livre (optionnel)',
+                  prefixIcon: Icon(Icons.description),
+                  alignLabelWithHint: true,
                 ),
                 maxLines: 4,
+                textInputAction: TextInputAction.next,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Prix et stock
+              Text(
+                'Prix et inventaire',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+
               Row(
                 children: [
                   Expanded(
@@ -217,9 +309,17 @@ class _BookFormScreenState extends State<BookFormScreen> {
                       controller: _priceController,
                       decoration: const InputDecoration(
                         labelText: 'Prix (€) *',
-                        border: OutlineInputBorder(),
+                        hintText: '0.00',
+                        prefixIcon: Icon(Icons.euro),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d+\.?\d{0,2}'),
+                        ),
+                      ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Le prix est requis';
@@ -230,6 +330,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
                         }
                         return null;
                       },
+                      textInputAction: TextInputAction.next,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -238,9 +339,11 @@ class _BookFormScreenState extends State<BookFormScreen> {
                       controller: _stockController,
                       decoration: const InputDecoration(
                         labelText: 'Stock *',
-                        border: OutlineInputBorder(),
+                        hintText: '0',
+                        prefixIcon: Icon(Icons.inventory),
                       ),
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Le stock est requis';
@@ -251,59 +354,180 @@ class _BookFormScreenState extends State<BookFormScreen> {
                         }
                         return null;
                       },
+                      textInputAction: TextInputAction.next,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedLanguage,
-                decoration: const InputDecoration(
-                  labelText: 'Langue *',
-                  border: OutlineInputBorder(),
-                ),
-                items: _languages.map((language) {
-                  return DropdownMenuItem(
-                    value: language,
-                    child: Text(language.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value!;
-                  });
-                },
+
+              const SizedBox(height: 32),
+
+              // Catégorie et langue
+              Text(
+                'Classification',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Catégorie *',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.category),
                 ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
+                items:
+                    _categories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedCategory = value!;
                   });
                 },
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Disponible'),
-                subtitle: const Text('Le livre est-il disponible à la vente ?'),
-                value: _isAvailable,
-                onChanged: (value) {
-                  setState(() {
-                    _isAvailable = value;
-                  });
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Veuillez sélectionner une catégorie';
+                  }
+                  return null;
                 },
               ),
+              const SizedBox(height: 16),
+
+              DropdownButtonFormField<String>(
+                value: _selectedLanguage,
+                decoration: const InputDecoration(
+                  labelText: 'Langue *',
+                  prefixIcon: Icon(Icons.language),
+                ),
+                items:
+                    _languages.map((language) {
+                      return DropdownMenuItem(
+                        value: language,
+                        child: Row(
+                          children: [
+                            Icon(
+                              language == 'francais'
+                                  ? Icons.flag
+                                  : language == 'arabe'
+                                  ? Icons.flag_outlined
+                                  : Icons.flag_circle,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(language.toUpperCase()),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedLanguage = value!;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Veuillez sélectionner une langue';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 32),
+
+              // Disponibilité
+              Text(
+                'Disponibilité',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SwitchListTile(
+                  title: const Text('Livre disponible'),
+                  subtitle: Text(
+                    _isAvailable
+                        ? 'Le livre est disponible à la vente'
+                        : 'Le livre n\'est pas disponible à la vente',
+                    style: TextStyle(
+                      color: _isAvailable ? Colors.green : Colors.red,
+                    ),
+                  ),
+                  value: _isAvailable,
+                  onChanged: (value) {
+                    setState(() {
+                      _isAvailable = value;
+                    });
+                  },
+                  secondary: Icon(
+                    _isAvailable ? Icons.check_circle : Icons.cancel,
+                    color: _isAvailable ? Colors.green : Colors.red,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Boutons d'action
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _isLoading
+                              ? null
+                              : () {
+                                Navigator.of(context).pop();
+                              },
+                      child: const Text('Annuler'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveBook,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      child:
+                          _isLoading
+                              ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Enregistrement...'),
+                                ],
+                              )
+                              : Text(
+                                widget.book == null ? 'Créer' : 'Modifier',
+                              ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
             ],
           ),
         ),
