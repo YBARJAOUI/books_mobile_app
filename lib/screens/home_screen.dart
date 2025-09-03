@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
-import '../utils/responsive_layout.dart';
 
 class HomeScreen extends StatefulWidget {
   final Widget child;
@@ -18,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
     NavigationItem(
       icon: Icons.dashboard_outlined,
       selectedIcon: Icons.dashboard,
-      label: 'Tableau de bord',
+      label: 'Dashboard',
       route: '/dashboard',
     ),
     NavigationItem(
@@ -40,22 +39,15 @@ class _HomeScreenState extends State<HomeScreen> {
       route: '/orders',
     ),
     NavigationItem(
-      icon: Icons.inventory_outlined,
-      selectedIcon: Icons.inventory,
-      label: 'Packs',
-      route: '/packs',
-    ),
-    NavigationItem(
       icon: Icons.local_offer_outlined,
       selectedIcon: Icons.local_offer,
-      label: 'Offres du jour',
+      label: 'Offres',
       route: '/daily-offers',
     ),
   ];
 
   int get _selectedIndex {
-    final currentRoute =
-        GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
+    final currentRoute = GoRouterState.of(context).uri.path;
     for (int i = 0; i < _navigationItems.length; i++) {
       if (currentRoute.startsWith(_navigationItems[i].route)) {
         return i;
@@ -72,231 +64,144 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveLayout(
-      mobile: _buildMobileLayout(),
-      tablet: _buildTabletLayout(),
-      desktop: _buildDesktopLayout(),
-    );
-  }
-
-  Widget _buildMobileLayout() {
     return Scaffold(
+      drawer: _buildDrawer(context),
       body: widget.child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: _onDestinationSelected,
-        destinations:
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: _onDestinationSelected,
+        selectedItemColor: Theme.of(context).primaryColor,
+        unselectedItemColor: Colors.grey[600],
+        backgroundColor: Colors.white,
+        elevation: 8,
+        items:
             _navigationItems.map((item) {
-              return NavigationDestination(
+              return BottomNavigationBarItem(
                 icon: Icon(item.icon),
-                selectedIcon: Icon(item.selectedIcon),
-                label: _truncateLabel(item.label, 10),
+                activeIcon: Icon(item.selectedIcon),
+                label: item.label,
               );
             }).toList(),
       ),
     );
   }
 
-  Widget _buildTabletLayout() {
-    return Scaffold(
-      body: Row(
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: Column(
         children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _onDestinationSelected,
-            extended: false,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            destinations:
-                _navigationItems.map((item) {
-                  return NavigationRailDestination(
-                    icon: Icon(item.icon),
-                    selectedIcon: Icon(item.selectedIcon),
-                    label: Text(item.label),
-                  );
-                }).toList(),
-          ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: widget.child),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDesktopLayout() {
-    return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _onDestinationSelected,
-            extended: true,
-            minExtendedWidth: 240,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            leading: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.store,
-                    size: 32,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Backoffice',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
+          DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).primaryColor,
+                  Theme.of(context).primaryColor.withOpacity(0.8),
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            trailing: Expanded(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Consumer<AppStateProvider>(
-                    builder: (context, appState, child) {
-                      return Card(
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Theme.of(context).primaryColor,
-                            child: Text(
-                              appState.currentUser[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            appState.currentUser,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          subtitle: const Text('Administrateur'),
-                          trailing: PopupMenuButton(
-                            itemBuilder:
-                                (context) => [
-                                  const PopupMenuItem(
-                                    child: ListTile(
-                                      leading: Icon(Icons.person),
-                                      title: Text('Profil'),
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    child: ListTile(
-                                      leading: Icon(Icons.settings),
-                                      title: Text('Paramètres'),
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    child: ListTile(
-                                      leading: Icon(Icons.logout),
-                                      title: Text('Déconnexion'),
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ),
-                                ],
-                          ),
-                        ),
-                      );
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.store, color: Colors.white, size: 28),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Bookstore Backoffice',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  'Gestion de librairie',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _navigationItems.length,
+              itemBuilder: (context, index) {
+                final item = _navigationItems[index];
+                final isSelected = _selectedIndex == index;
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 2,
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      isSelected ? item.selectedIcon : item.icon,
+                      color:
+                          isSelected
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey[600],
+                    ),
+                    title: Text(
+                      item.label,
+                      style: TextStyle(
+                        color:
+                            isSelected
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[800],
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedTileColor: Theme.of(
+                      context,
+                    ).primaryColor.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onTap: () {
+                      _onDestinationSelected(index);
+                      Navigator.of(context).pop(); // Fermer le drawer
                     },
                   ),
+                );
+              },
+            ),
+          ),
+          const Divider(),
+          Consumer<AppStateProvider>(
+            builder: (context, appState, child) {
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: Text(
+                    appState.currentUser[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            destinations:
-                _navigationItems.map((item) {
-                  return NavigationRailDestination(
-                    icon: Icon(item.icon),
-                    selectedIcon: Icon(item.selectedIcon),
-                    label: Text(item.label),
-                  );
-                }).toList(),
+                title: Text(appState.currentUser),
+                subtitle: const Text('Administrateur'),
+              );
+            },
           ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: Column(
-              children: [_buildTopBar(), Expanded(child: widget.child)],
-            ),
-          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 56,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                _getPageTitle(),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-          // Barre de recherche rapide (optionnel)
-          Container(
-            width: 300,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Recherche rapide...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getPageTitle() {
-    final currentRoute =
-        GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
-    final item = _navigationItems.firstWhere(
-      (item) => currentRoute.startsWith(item.route),
-      orElse: () => _navigationItems.first,
-    );
-    return item.label;
-  }
-
-  String _truncateLabel(String label, int maxLength) {
-    return label.length > maxLength
-        ? '${label.substring(0, maxLength)}...'
-        : label;
   }
 }
 
