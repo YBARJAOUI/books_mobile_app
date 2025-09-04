@@ -36,7 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
-        // Données par défaut en cas d'erreur
+        // بيانات افتراضية في حالة الخطأ
         _statistics = {
           'totalBooks': 0,
           'totalCustomers': 0,
@@ -56,7 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tableau de bord'),
+        title: const Text('لوحة التحكم'),
         automaticallyImplyLeading: false,
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
@@ -65,7 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadStatistics,
-            tooltip: 'Actualiser',
+            tooltip: 'تحديث',
           ),
         ],
       ),
@@ -77,7 +77,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
-                    Text('Chargement des statistiques...'),
+                    Text('تحميل الإحصائيات...'),
                   ],
                 ),
               )
@@ -105,13 +105,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Connexion au serveur',
+                                    'الاتصال بالخادم',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    'Impossible de charger les données en temps réel. Utilisation des données par défaut.',
+                                    'لا يمكن تحميل البيانات في الوقت الفعلي. استخدام البيانات الافتراضية.',
                                     style: TextStyle(fontSize: 12),
                                   ),
                                 ],
@@ -142,7 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisSpacing: screenWidth * 0.03,
           children: [
             _buildStatCard(
-              'Livres',
+              'الكتب',
               _statistics['totalBooks']?.toString() ?? '0',
               Icons.book,
               Colors.blue,
@@ -150,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               () => context.go('/books'),
             ),
             _buildStatCard(
-              'Clients',
+              'العملاء',
               _statistics['totalCustomers']?.toString() ?? '0',
               Icons.people,
               Colors.green,
@@ -158,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               () => context.go('/customers'),
             ),
             _buildStatCard(
-              'Commandes',
+              'الطلبات',
               _statistics['totalOrders']?.toString() ?? '0',
               Icons.shopping_cart,
               Colors.orange,
@@ -166,7 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               () => context.go('/orders'),
             ),
             _buildStatCard(
-              'Packs',
+              'الحزم',
               _statistics['totalPacks']?.toString() ?? '0',
               Icons.inventory,
               Colors.purple,
@@ -174,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               () => context.go('/packs'),
             ),
             _buildStatCard(
-              'Offres',
+              'العروض',
               _statistics['totalOffers']?.toString() ?? '0',
               Icons.local_offer,
               Colors.red,
@@ -182,7 +182,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               () => context.go('/daily-offers'),
             ),
             _buildStatCard(
-              'Revenus',
+              'الإيرادات',
               _formatRevenue(_statistics['totalRevenue']),
               Icons.euro,
               Colors.teal,

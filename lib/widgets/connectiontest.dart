@@ -11,7 +11,7 @@ class ConnectionTestWidget extends StatefulWidget {
 class _ConnectionTestWidgetState extends State<ConnectionTestWidget> {
   bool _isConnected = false;
   bool _isTesting = false;
-  String _statusMessage = 'Non testé';
+  String _statusMessage = 'غير مختبر';
   String _serverInfo = '';
 
   @override
@@ -23,31 +23,31 @@ class _ConnectionTestWidgetState extends State<ConnectionTestWidget> {
   Future<void> _testConnection() async {
     setState(() {
       _isTesting = true;
-      _statusMessage = 'Test en cours...';
+      _statusMessage = 'جاري الاختبار...';
     });
 
     try {
-      // Test de base
+      // اختبار أساسي
       final isConnected = await ApiService.testConnection();
 
-      String info = 'URL du serveur: ${ApiService.baseUrl}\n';
+      String info = 'رابط الخادم: ${ApiService.baseUrl}\n';
 
       if (isConnected) {
         try {
-          // Essayer de récupérer les informations du serveur
+          // محاولة جلب معلومات الخادم
           final response = await ApiService.get('/info');
           final data = ApiService.handleResponse(response);
-          info += 'Nom: ${data['name'] ?? 'N/A'}\n';
-          info += 'Version: ${data['version'] ?? 'N/A'}\n';
-          info += 'Description: ${data['description'] ?? 'N/A'}';
+          info += 'الاسم: ${data['name'] ?? 'N/A'}\n';
+          info += 'الإصدار: ${data['version'] ?? 'N/A'}\n';
+          info += 'الوصف: ${data['description'] ?? 'N/A'}';
         } catch (e) {
-          info += 'Informations détaillées non disponibles';
+          info += 'المعلومات التفصيلية غير متاحة';
         }
       } else {
-        info += 'Impossible de se connecter au serveur.\n';
-        info += 'Vérifiez que :\n';
-        info += '• Le serveur backend est démarré\n';
-        info += '• L\'adresse IP est correcte\n';
+        info += 'غير قادر على الاتصال بالخادم.\n';
+        info += 'تأكد من أن:\n';
+        info += '• الخادم الخلفي يعمل\n';
+        info += '• عنوان IP صحيح\n';
         info += '• Le port 8080 est ouvert\n';
         info += '• Votre appareil est sur le même réseau';
       }

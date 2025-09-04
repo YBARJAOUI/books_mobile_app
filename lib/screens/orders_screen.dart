@@ -40,7 +40,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors du chargement des commandes: $e'),
+            content: Text('خطأ في تحميل الطلبات: $e'),
           ),
         );
       }
@@ -57,13 +57,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
       _loadOrders();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Statut de la commande mis à jour')),
+          const SnackBar(content: Text('تم تحديث حالة الطلب')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de la mise à jour: $e')),
+          SnackBar(content: Text('خطأ في التحديث: $e')),
         );
       }
     }
@@ -87,15 +87,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
   String _getStatusDisplayName(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 'En attente';
+        return 'في الانتظار';
       case OrderStatus.confirmed:
-        return 'Confirmée';
+        return 'مؤكد';
       case OrderStatus.shipped:
-        return 'Expédiée';
+        return 'تم الشحن';
       case OrderStatus.delivered:
-        return 'Livrée';
+        return 'تم التسليم';
       case OrderStatus.cancelled:
-        return 'Annulée';
+        return 'ملغى';
     }
   }
 
@@ -105,7 +105,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       appBar:
           ResponsiveLayout.isMobile(context)
               ? AppBar(
-                title: const Text('Gestion des Commandes'),
+                title: const Text('إدارة الطلبات'),
                 automaticallyImplyLeading: false,
                 actions: [
                   IconButton(

@@ -25,23 +25,23 @@ class _BookFormScreenState extends State<BookFormScreen> {
   File? _selectedImage;
   String? _imageBase64;
 
-  String _selectedLanguage = 'francais';
-  String _selectedCategory = 'Fiction';
+  String _selectedLanguage = 'العربية';
+  String _selectedCategory = 'رواية';
   bool _isAvailable = true;
   bool _isLoading = false;
 
-  final List<String> _languages = ['francais', 'arabe', 'anglais'];
+  final List<String> _languages = ['العربية', 'الفرنسية', 'الإنجليزية'];
   final List<String> _categories = [
-    'Fiction',
-    'Non-Fiction',
-    'Science',
-    'Histoire',
-    'Philosophie',
-    'Art',
-    'Cuisine',
-    'Technologie',
-    'Santé',
-    'Jeunesse',
+    'رواية',
+    'غير روائي',
+    'علوم',
+    'تاريخ',
+    'فلسفة',
+    'فن',
+    'طبخ',
+    'تكنولوجيا',
+    'صحة',
+    'أطفال',
   ];
 
   @override
@@ -79,7 +79,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Galerie'),
+                title: const Text('المعرض'),
                 onTap: () async {
                   Navigator.of(context).pop();
                   final XFile? image = await picker.pickImage(
@@ -99,7 +99,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera),
-                title: const Text('Appareil photo'),
+                title: const Text('الكاميرا'),
                 onTap: () async {
                   Navigator.of(context).pop();
                   final XFile? image = await picker.pickImage(
@@ -120,7 +120,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
               if (_selectedImage != null || _imageBase64 != null)
                 ListTile(
                   leading: const Icon(Icons.delete),
-                  title: const Text('Supprimer l\'image'),
+                  title: const Text('حذف الصورة'),
                   onTap: () {
                     Navigator.of(context).pop();
                     setState(() {
@@ -173,8 +173,8 @@ class _BookFormScreenState extends State<BookFormScreen> {
           SnackBar(
             content: Text(
               widget.book == null
-                  ? 'Livre créé avec succès'
-                  : 'Livre modifié avec succès',
+                  ? 'تم إنشاء الكتاب بنجاح'
+                  : 'تم تعديل الكتاب بنجاح',
             ),
             backgroundColor: Colors.green,
           ),
@@ -183,7 +183,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -197,9 +197,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.book == null ? 'Nouveau Livre' : 'Modifier le Livre',
-        ),
+        title: Text(widget.book == null ? 'كتاب جديد' : 'تعديل الكتاب'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
@@ -219,7 +217,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
                       )
                       : const Icon(Icons.save, color: Colors.white),
               label: Text(
-                _isLoading ? 'Enregistrement...' : 'Enregistrer',
+                _isLoading ? 'جاري الحفظ...' : 'حفظ',
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -233,7 +231,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // En-tête avec icône
+              // En-tête
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -255,13 +253,13 @@ class _BookFormScreenState extends State<BookFormScreen> {
                         children: [
                           Text(
                             widget.book == null
-                                ? 'Créer un nouveau livre'
-                                : 'Modifier le livre',
+                                ? 'إضافة كتاب جديد'
+                                : 'تعديل الكتاب',
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'Remplissez les informations du livre',
+                            'املأ معلومات الكتاب',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.grey[600]),
                           ),
@@ -274,9 +272,9 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
               const SizedBox(height: 24),
 
-              // Informations principales
+              // Infos principales
               Text(
-                'Informations principales',
+                'المعلومات الأساسية',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -286,16 +284,16 @@ class _BookFormScreenState extends State<BookFormScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Titre *',
-                  hintText: 'Entrez le titre du livre',
+                  labelText: 'العنوان *',
+                  hintText: 'أدخل عنوان الكتاب',
                   prefixIcon: Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Le titre est requis';
+                    return 'العنوان مطلوب';
                   }
                   if (value.trim().length < 2 || value.trim().length > 200) {
-                    return 'Le titre doit contenir entre 2 et 200 caractères';
+                    return 'العنوان يجب أن يحتوي بين 2 و 200 حرف';
                   }
                   return null;
                 },
@@ -306,16 +304,16 @@ class _BookFormScreenState extends State<BookFormScreen> {
               TextFormField(
                 controller: _authorController,
                 decoration: const InputDecoration(
-                  labelText: 'Auteur *',
-                  hintText: 'Entrez le nom de l\'auteur',
+                  labelText: 'المؤلف *',
+                  hintText: 'أدخل اسم المؤلف',
                   prefixIcon: Icon(Icons.person),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'L\'auteur est requis';
+                    return 'اسم المؤلف مطلوب';
                   }
                   if (value.trim().length < 2 || value.trim().length > 100) {
-                    return 'L\'auteur doit contenir entre 2 et 100 caractères';
+                    return 'اسم المؤلف يجب أن يحتوي بين 2 و 100 حرف';
                   }
                   return null;
                 },
@@ -326,8 +324,8 @@ class _BookFormScreenState extends State<BookFormScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Décrivez le livre (optionnel)',
+                  labelText: 'الوصف',
+                  hintText: 'أدخل وصف الكتاب (اختياري)',
                   prefixIcon: Icon(Icons.description),
                   alignLabelWithHint: true,
                 ),
@@ -339,7 +337,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
               // Image Section
               Text(
-                'Image du livre',
+                'صورة الكتاب',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -384,8 +382,8 @@ class _BookFormScreenState extends State<BookFormScreen> {
                         icon: const Icon(Icons.add_a_photo),
                         label: Text(
                           _selectedImage != null || _imageBase64 != null
-                              ? 'Changer l\\image'
-                              : 'Ajouter une image',
+                              ? 'تغيير الصورة'
+                              : 'إضافة صورة',
                         ),
                       ),
                     ),
@@ -397,7 +395,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
               // Prix
               Text(
-                'Prix',
+                'السعر',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -407,7 +405,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(
-                  labelText: 'Prix (€) *',
+                  labelText: 'السعر (€) *',
                   hintText: '0.00',
                   prefixIcon: Icon(Icons.euro),
                 ),
@@ -417,11 +415,11 @@ class _BookFormScreenState extends State<BookFormScreen> {
                 ],
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Le prix est requis';
+                    return 'السعر مطلوب';
                   }
                   final price = double.tryParse(value.trim());
                   if (price == null || price <= 0) {
-                    return 'Le prix doit être supérieur à 0';
+                    return 'السعر يجب أن يكون أكبر من 0';
                   }
                   return null;
                 },
@@ -432,7 +430,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
               // Catégorie et langue
               Text(
-                'Classification',
+                'التصنيف',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -442,7 +440,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 decoration: const InputDecoration(
-                  labelText: 'Catégorie *',
+                  labelText: 'الفئة *',
                   prefixIcon: Icon(Icons.category),
                 ),
                 items:
@@ -459,7 +457,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez sélectionner une catégorie';
+                    return 'الرجاء اختيار فئة';
                   }
                   return null;
                 },
@@ -469,27 +467,14 @@ class _BookFormScreenState extends State<BookFormScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedLanguage,
                 decoration: const InputDecoration(
-                  labelText: 'Langue *',
+                  labelText: 'اللغة *',
                   prefixIcon: Icon(Icons.language),
                 ),
                 items:
                     _languages.map((language) {
                       return DropdownMenuItem(
                         value: language,
-                        child: Row(
-                          children: [
-                            Icon(
-                              language == 'francais'
-                                  ? Icons.flag
-                                  : language == 'arabe'
-                                  ? Icons.flag_outlined
-                                  : Icons.flag_circle,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(language.toUpperCase()),
-                          ],
-                        ),
+                        child: Text(language),
                       );
                     }).toList(),
                 onChanged: (value) {
@@ -499,7 +484,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Veuillez sélectionner une langue';
+                    return 'الرجاء اختيار لغة';
                   }
                   return null;
                 },
@@ -509,7 +494,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
               // Disponibilité
               Text(
-                'Disponibilité',
+                'التوفر',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -522,11 +507,11 @@ class _BookFormScreenState extends State<BookFormScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('Livre disponible'),
+                  title: const Text('الكتاب متوفر'),
                   subtitle: Text(
                     _isAvailable
-                        ? 'Le livre est disponible à la vente'
-                        : 'Le livre n\'est pas disponible à la vente',
+                        ? 'الكتاب متوفر للبيع'
+                        : 'الكتاب غير متوفر للبيع',
                     style: TextStyle(
                       color: _isAvailable ? Colors.green : Colors.red,
                     ),
@@ -557,7 +542,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
                               : () {
                                 Navigator.of(context).pop();
                               },
-                      child: const Text('Annuler'),
+                      child: const Text('إلغاء'),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -584,12 +569,10 @@ class _BookFormScreenState extends State<BookFormScreen> {
                                     ),
                                   ),
                                   SizedBox(width: 8),
-                                  Text('Enregistrement...'),
+                                  Text('جاري الحفظ...'),
                                 ],
                               )
-                              : Text(
-                                widget.book == null ? 'Créer' : 'Modifier',
-                              ),
+                              : Text(widget.book == null ? 'إضافة' : 'تعديل'),
                     ),
                   ),
                 ],

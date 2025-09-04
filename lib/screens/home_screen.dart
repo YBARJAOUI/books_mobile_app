@@ -17,31 +17,31 @@ class _HomeScreenState extends State<HomeScreen> {
     NavigationItem(
       icon: Icons.dashboard_outlined,
       selectedIcon: Icons.dashboard,
-      label: 'Dashboard',
+      label: 'لوحة التحكم',
       route: '/dashboard',
     ),
     NavigationItem(
       icon: Icons.book_outlined,
       selectedIcon: Icons.book,
-      label: 'Livres',
+      label: 'الكتب',
       route: '/books',
     ),
     NavigationItem(
       icon: Icons.people_outlined,
       selectedIcon: Icons.people,
-      label: 'Clients',
+      label: 'العملاء',
       route: '/customers',
     ),
     NavigationItem(
       icon: Icons.shopping_cart_outlined,
       selectedIcon: Icons.shopping_cart,
-      label: 'Commandes',
+      label: 'الطلبات',
       route: '/orders',
     ),
     NavigationItem(
       icon: Icons.local_offer_outlined,
       selectedIcon: Icons.local_offer,
-      label: 'Offres',
+      label: 'العروض',
       route: '/daily-offers',
     ),
   ];
@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Bookstore Backoffice',
+                  'إدارة المكتبة',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const Text(
-                  'Gestion de librairie',
+                  'نظام إدارة المكتبة',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     onTap: () {
                       _onDestinationSelected(index);
-                      Navigator.of(context).pop(); // Fermer le drawer
+                      Navigator.of(context).pop(); // إغلاق القائمة الجانبية
                     },
                   ),
                 );
@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 title: Text(appState.currentUser),
-                subtitle: const Text('Administrateur'),
+                subtitle: const Text('المدير'),
               );
             },
           ),

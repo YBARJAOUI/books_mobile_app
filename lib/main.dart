@@ -7,7 +7,7 @@ void main() {
   runApp(const BookstoreBackofficeApp());
 }
 
-// Provider pour gérer l'état global de l'application
+// Provider لإدارة الحالة العامة للتطبيق
 class AppStateProvider extends ChangeNotifier {
   bool _isLoading = false;
   String _currentUser = 'Admin';
@@ -50,7 +50,7 @@ class BookstoreBackofficeApp extends StatelessWidget {
       child: Consumer<AppStateProvider>(
         builder: (context, appState, child) {
           return MaterialApp.router(
-            title: 'Bookstore Backoffice',
+            title: 'إدارة المكتبة',
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(
                 seedColor: Colors.blue,
@@ -116,7 +116,7 @@ class BookstoreBackofficeApp extends StatelessWidget {
                                   child: ElevatedButton(
                                     onPressed: appState.toggleConnectionTest,
                                     child: const Text(
-                                      'Fermer le test de connexion',
+                                      'إغلاق اختبار الاتصال',
                                     ),
                                   ),
                                 ),

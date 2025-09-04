@@ -39,10 +39,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors du chargement des clients: $e'),
+            content: Text('خطأ في تحميل العملاء: $e'),
             backgroundColor: Colors.red,
             action: SnackBarAction(
-              label: 'Réessayer',
+              label: 'إعادة المحاولة',
               textColor: Colors.white,
               onPressed: _loadCustomers,
             ),
@@ -79,7 +79,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           return matchesSearch && matchesStatus;
         }).toList();
 
-    // Tri par nom
+    // ترتيب بالاسم
     filteredCustomers.sort(
       (a, b) => '${a.firstName} ${a.lastName}'.compareTo(
         '${b.firstName} ${b.lastName}',
@@ -93,10 +93,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Confirmer la suppression'),
+            title: const Text('تأكيد الحذف'),
             content: Text(
-              'Êtes-vous sûr de vouloir supprimer le client ${customer.fullName} ?\n\n'
-              'Cette action est irréversible.',
+              'هل أنت متأكد من أنك تريد حذف العميل ${customer.fullName}؟\n\n'
+              'هذه العملية غير قابلة للتراجع.',
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -104,13 +104,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Annuler'),
+                child: const Text('إلغاء'),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text(
-                  'Supprimer',
+                  'حذف',
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -125,7 +125,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Client supprimé avec succès'),
+              content: Text('تم حذف العميل بنجاح'),
               backgroundColor: Colors.green,
             ),
           );
@@ -134,7 +134,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Erreur lors de la suppression: $e'),
+              content: Text('خطأ في الحذف: $e'),
               backgroundColor: Colors.red,
             ),
           );
@@ -250,7 +250,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      customer.isActive ? 'Actif' : 'Inactif',
+                      customer.isActive ? 'نشط' : 'غير نشط',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -265,22 +265,22 @@ class _CustomersScreenState extends State<CustomersScreen> {
         ),
         const SizedBox(height: 24),
         _buildDetailItem(Icons.email, 'Email', customer.email),
-        _buildDetailItem(Icons.phone, 'Téléphone', customer.phoneNumber),
-        _buildDetailItem(Icons.location_on, 'Adresse', customer.address),
+        _buildDetailItem(Icons.phone, 'هاتف', customer.phoneNumber),
+        _buildDetailItem(Icons.location_on, 'عنوان', customer.address),
         if (customer.city != null)
-          _buildDetailItem(Icons.location_city, 'Ville', customer.city!),
+          _buildDetailItem(Icons.location_city, 'مدينة', customer.city!),
         if (customer.postalCode != null)
           _buildDetailItem(
             Icons.local_post_office,
-            'Code postal',
+            'الرمز البريدي',
             customer.postalCode!,
           ),
         if (customer.country != null)
-          _buildDetailItem(Icons.flag, 'Pays', customer.country!),
+          _buildDetailItem(Icons.flag, 'بلد', customer.country!),
         if (customer.createdAt != null)
           _buildDetailItem(
             Icons.calendar_today,
-            'Créé le',
+            'تاريخ الإنشاء',
             '${customer.createdAt!.day}/${customer.createdAt!.month}/${customer.createdAt!.year}',
           ),
         const SizedBox(height: 20),
@@ -296,7 +296,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   );
                 },
                 icon: const Icon(Icons.edit),
-                label: const Text('Modifier'),
+                label: const Text('تعديل'),
               ),
             ),
             const SizedBox(width: 12),
@@ -307,7 +307,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   _deleteCustomer(customer.id!);
                 },
                 icon: const Icon(Icons.delete),
-                label: const Text('Supprimer'),
+                label: const Text('حذف'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -365,13 +365,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
       appBar:
           ResponsiveLayout.isMobile(context)
               ? AppBar(
-                title: const Text('Gestion des Clients'),
+                title: const Text('إدارة العملاء'),
                 automaticallyImplyLeading: false,
                 actions: [
                   IconButton(
                     onPressed: _loadCustomers,
                     icon: const Icon(Icons.refresh),
-                    tooltip: 'Actualiser',
+                    tooltip: 'تحديث',
                   ),
                 ],
               )
@@ -432,7 +432,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           children: [
             Expanded(
               child: _buildStatCard(
-                'Total',
+                'الإجمالي',
                 customers.length.toString(),
                 Colors.blue,
               ),
@@ -440,7 +440,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             SizedBox(width: ResponsiveSpacing.sm),
             Expanded(
               child: _buildStatCard(
-                'Actifs',
+                'النشطين',
                 activeCustomers.toString(),
                 Colors.green,
               ),
@@ -452,7 +452,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           children: [
             Expanded(
               child: _buildStatCard(
-                'Inactifs',
+                'غير النشطين',
                 inactiveCustomers.toString(),
                 Colors.orange,
               ),
@@ -533,7 +533,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       children: [
         TextField(
           decoration: InputDecoration(
-            hintText: 'Rechercher par nom, email ou téléphone...',
+            hintText: 'ابحث بالاسم أو البريد الإلكتروني أو الهاتف...',
             prefixIcon: const Icon(Icons.search),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
@@ -551,7 +551,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           children: [
             Expanded(
               child: FilterChip(
-                label: const Text('Actifs uniquement'),
+                label: const Text('النشطين فقط'),
                 selected: showActiveOnly,
                 onSelected: (selected) {
                   setState(() {
@@ -577,7 +577,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           flex: 3,
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Rechercher par nom, email ou téléphone...',
+              hintText: 'ابحث بالاسم أو البريد الإلكتروني أو الهاتف...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -616,7 +616,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          '${filteredCustomers.length} client(s) affiché(s)',
+          '${filteredCustomers.length} عميل معروض',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -625,7 +625,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           ElevatedButton.icon(
             onPressed: () => context.go('/customers/new'),
             icon: const Icon(Icons.add),
-            label: const Text('Nouveau Client'),
+            label: const Text('عميل جديد'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
@@ -643,7 +643,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Chargement des clients...'),
+            Text('تحميل العملاء...'),
           ],
         ),
       );
@@ -658,8 +658,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
             const SizedBox(height: 16),
             Text(
               searchQuery.isNotEmpty || showActiveOnly
-                  ? 'Aucun client trouvé avec ces critères'
-                  : 'Aucun client enregistré',
+                  ? 'لم يتم العثور على أي عميل بهذه المعايير'
+                  : 'لا يوجد عملاء مسجلون',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
@@ -669,7 +669,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               ElevatedButton.icon(
                 onPressed: () => context.go('/customers/new'),
                 icon: const Icon(Icons.add),
-                label: const Text('Créer le premier client'),
+                label: const Text('إنشاء أول عميل'),
               ),
           ],
         ),
@@ -767,7 +767,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         children: [
                           Icon(Icons.visibility),
                           SizedBox(width: 8),
-                          Text('Voir détails'),
+                          Text('عرض التفاصيل'),
                         ],
                       ),
                     ),
@@ -777,7 +777,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         children: [
                           Icon(Icons.edit),
                           SizedBox(width: 8),
-                          Text('Modifier'),
+                          Text('تعديل'),
                         ],
                       ),
                     ),
@@ -788,7 +788,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           Icon(Icons.delete, color: Colors.red),
                           SizedBox(width: 8),
                           Text(
-                            'Supprimer',
+                            'حذف',
                             style: TextStyle(color: Colors.red),
                           ),
                         ],
@@ -885,7 +885,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      customer.isActive ? 'Actif' : 'Inactif',
+                      customer.isActive ? 'نشط' : 'غير نشط',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -904,7 +904,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                               extra: customer.toJson(),
                             ),
                         icon: const Icon(Icons.edit, size: 18),
-                        tooltip: 'Modifier',
+                        tooltip: 'تعديل',
                       ),
                       IconButton(
                         onPressed: () => _deleteCustomer(customer.id!),
@@ -913,7 +913,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           color: Colors.red,
                           size: 18,
                         ),
-                        tooltip: 'Supprimer',
+                        tooltip: 'حذف',
                       ),
                     ],
                   ),

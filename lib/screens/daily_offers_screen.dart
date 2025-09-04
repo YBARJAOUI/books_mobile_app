@@ -41,7 +41,7 @@ class _DailyOffersScreenState extends State<DailyOffersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors du chargement des offres: $e'),
+            content: Text('خطأ في تحميل العروض: $e'),
             backgroundColor: Colors.red,
           ),
         );

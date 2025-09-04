@@ -17,24 +17,24 @@ class _BooksScreenState extends State<BooksScreen> {
   List<Book> filteredBooks = [];
   bool isLoading = false;
   String searchQuery = '';
-  String selectedCategory = 'Tous';
+  String selectedCategory = 'الكل';
 
   final List<String> categories = [
-    'Tous',
-    'Fiction',
-    'Non-Fiction',
-    'Science-Fiction',
-    'Science',
-    'Histoire',
-    'Philosophie',
-    'Art',
-    'Cuisine',
-    'Technologie',
-    'Santé',
-    'Jeunesse',
-    'Romance',
-    'Thriller',
-    'Fantasy',
+    'الكل',
+    'رواية',
+    'غير روائي',
+    'خيال علمي',
+    'علوم',
+    'تاريخ',
+    'فلسفة',
+    'فن',
+    'طبخ',
+    'تكنولوجيا',
+    'صحة',
+    'شباب',
+    'رومانسية',
+    'مثيرة',
+    'خيال',
   ];
 
   @override
@@ -53,9 +53,9 @@ class _BooksScreenState extends State<BooksScreen> {
       setState(() {
         books = loadedBooks;
         final bookCategories = books.map((book) => book.category).toSet();
-        if (selectedCategory != 'Tous' &&
+        if (selectedCategory != 'الكل' &&
             !bookCategories.contains(selectedCategory)) {
-          selectedCategory = 'Tous';
+          selectedCategory = 'الكل';
         }
         _applyFilters();
       });
@@ -63,7 +63,7 @@ class _BooksScreenState extends State<BooksScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors du chargement des livres: $e'),
+            content: Text('خطأ في تحميل الكتب: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -84,7 +84,7 @@ class _BooksScreenState extends State<BooksScreen> {
               book.author.toLowerCase().contains(searchQuery.toLowerCase());
 
           final matchesCategory =
-              selectedCategory == 'Tous' || book.category == selectedCategory;
+              selectedCategory == 'الكل' || book.category == selectedCategory;
 
           return matchesSearch && matchesCategory;
         }).toList();
@@ -95,9 +95,9 @@ class _BooksScreenState extends State<BooksScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Confirmer la suppression'),
+            title: const Text('تأكيد الحذف'),
             content: const Text(
-              'Êtes-vous sûr de vouloir supprimer ce livre ?',
+              'هل أنت متأكد من أنك تريد حذف هذا الكتاب؟',
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -105,13 +105,13 @@ class _BooksScreenState extends State<BooksScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Annuler'),
+                child: const Text('إلغاء'),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text(
-                  'Supprimer',
+                  'حذف',
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -126,7 +126,7 @@ class _BooksScreenState extends State<BooksScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Livre supprimé avec succès'),
+              content: Text('تم حذف الكتاب بنجاح'),
               backgroundColor: Colors.green,
             ),
           );
@@ -135,7 +135,7 @@ class _BooksScreenState extends State<BooksScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Erreur lors de la suppression: $e'),
+              content: Text('خطأ في الحذف: $e'),
               backgroundColor: Colors.red,
             ),
           );
@@ -237,7 +237,7 @@ class _BooksScreenState extends State<BooksScreen> {
                           );
                         },
                         icon: const Icon(Icons.edit),
-                        label: const Text('Modifier'),
+                        label: const Text('تعديل'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
@@ -251,7 +251,7 @@ class _BooksScreenState extends State<BooksScreen> {
                           _deleteBook(book.id!);
                         },
                         icon: const Icon(Icons.delete),
-                        label: const Text('Supprimer'),
+                        label: const Text('حذف'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
@@ -271,10 +271,10 @@ class _BooksScreenState extends State<BooksScreen> {
 
   int _getGridColumns(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    if (screenWidth > 1200) return 5; // Desktop: 5 photos par ligne
-    if (screenWidth > 768) return 4; // Tablette: 4 photos par ligne
-    if (screenWidth > 480) return 3; // Mobile large: 3 photos par ligne
-    return 2; // Mobile petit: 2 photos par ligne
+    if (screenWidth > 1200) return 5; // سطح المكتب: 5 صور في السطر
+    if (screenWidth > 768) return 4; // تابليت: 4 صور في السطر
+    if (screenWidth > 480) return 3; // جوال كبير: 3 صور في السطر
+    return 2; // جوال صغير: صورتان في السطر
   }
 
   @override
@@ -283,13 +283,13 @@ class _BooksScreenState extends State<BooksScreen> {
       appBar:
           ResponsiveLayout.isMobile(context)
               ? AppBar(
-                title: const Text('Galerie de Livres'),
+                title: const Text('معرض الكتب'),
                 automaticallyImplyLeading: false,
                 actions: [
                   IconButton(
                     onPressed: _loadBooks,
                     icon: const Icon(Icons.refresh),
-                    tooltip: 'Actualiser',
+                    tooltip: 'تحديث',
                   ),
                 ],
               )
@@ -303,7 +303,7 @@ class _BooksScreenState extends State<BooksScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/books/new'),
         child: const Icon(Icons.add),
-        tooltip: 'Ajouter un livre',
+        tooltip: 'إضافة كتاب',
       ),
     );
   }
@@ -323,10 +323,10 @@ class _BooksScreenState extends State<BooksScreen> {
       ),
       child: Column(
         children: [
-          // Barre de recherche
+          // شريط البحث
           TextField(
             decoration: InputDecoration(
-              hintText: 'Rechercher par titre ou auteur...',
+              hintText: 'ابحث بالعنوان أو المؤلف...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -344,16 +344,16 @@ class _BooksScreenState extends State<BooksScreen> {
 
           const SizedBox(height: 12),
 
-          // Filtres et statistiques
+          // المرشحات والإحصائيات
           Row(
             children: [
-              // Filtre par catégorie
+              // ترشيح بالفئة
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
                   value: selectedCategory,
                   decoration: InputDecoration(
-                    labelText: 'Catégorie',
+                    labelText: 'الفئة',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -382,7 +382,7 @@ class _BooksScreenState extends State<BooksScreen> {
 
               const SizedBox(width: 16),
 
-              // Nombre de livres
+              // عدد الكتب
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -396,7 +396,7 @@ class _BooksScreenState extends State<BooksScreen> {
                   ),
                 ),
                 child: Text(
-                  '${filteredBooks.length} livre(s)',
+                  '${filteredBooks.length} كتاب',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).primaryColor,
@@ -418,7 +418,7 @@ class _BooksScreenState extends State<BooksScreen> {
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Chargement des livres...'),
+            Text('تحميل الكتب...'),
           ],
         ),
       );
@@ -436,9 +436,9 @@ class _BooksScreenState extends State<BooksScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              searchQuery.isNotEmpty || selectedCategory != 'Tous'
-                  ? 'Aucun livre trouvé avec ces critères'
-                  : 'Aucune photo de livre disponible',
+              searchQuery.isNotEmpty || selectedCategory != 'الكل'
+                  ? 'لم يتم العثور على أي كتاب بهذه المعايير'
+                  : 'لا توجد صور للكتب',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
@@ -447,7 +447,7 @@ class _BooksScreenState extends State<BooksScreen> {
             ElevatedButton.icon(
               onPressed: () => context.go('/books/new'),
               icon: const Icon(Icons.add),
-              label: const Text('Ajouter le premier livre'),
+              label: const Text('إضافة أول كتاب'),
             ),
           ],
         ),
@@ -458,7 +458,7 @@ class _BooksScreenState extends State<BooksScreen> {
       padding: const EdgeInsets.all(16),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: _getGridColumns(context),
-        childAspectRatio: 0.75, // Ratio portrait pour les livres
+        childAspectRatio: 0.75, // نسبة طولية للكتب
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
@@ -489,7 +489,7 @@ class _BooksScreenState extends State<BooksScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Image du livre
+              // صورة الكتاب
               ImageHelper.buildImageFromBase64(
                 book.image,
                 fit: BoxFit.cover,
@@ -507,7 +507,7 @@ class _BooksScreenState extends State<BooksScreen> {
                 ),
               ),
 
-              // Overlay avec informations (apparaît au survol ou toujours visible sur mobile)
+              // طبقة المعلومات (تظهر عند التمرير أو دائماً على الجوال)
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -551,7 +551,7 @@ class _BooksScreenState extends State<BooksScreen> {
                 ),
               ),
 
-              // Indicateur de disponibilité
+              // مؤشر التوفر
               Positioned(
                 top: 8,
                 right: 8,
@@ -565,7 +565,7 @@ class _BooksScreenState extends State<BooksScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    book.isAvailable ? 'Dispo' : 'Épuisé',
+                    book.isAvailable ? 'متوفر' : 'نفذ',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 8,
