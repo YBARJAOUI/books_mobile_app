@@ -1,4 +1,3 @@
-import 'package:bookstore_backoffice/screens/dashbord.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/home_screen.dart';
 import '../screens/books_screen.dart';
@@ -10,10 +9,11 @@ import '../screens/book_form_screen.dart';
 import '../screens/customer_form_screen.dart';
 import '../screens/pack_form_screen.dart';
 import '../screens/daily_offer_form_screen.dart';
+import '../screens/dashbord.dart'; // Correction: dashbord au lieu de dashboard
 import '../models/book.dart';
 import '../models/customer.dart';
 import '../models/pack.dart';
-import '../models/daily_offer.dart';
+import '../models/daily_offer.dart'; // Ajout de l'import manquant
 
 class AppRouter {
   static final GoRouter router = GoRouter(

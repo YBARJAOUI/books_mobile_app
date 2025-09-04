@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:bookstore_backoffice/utils/image_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../models/daily_offer.dart';
 import '../services/daily_offer_service.dart';
@@ -18,9 +22,10 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
   final _descriptionController = TextEditingController();
   final _originalPriceController = TextEditingController();
   final _offerPriceController = TextEditingController();
-  final _imageUrlController = TextEditingController();
   final _limitQuantityController = TextEditingController();
-  
+
+  File? _selectedImage;
+  String? _imageBase64;
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 7));
   bool _isActive = true;
@@ -34,11 +39,12 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
       _descriptionController.text = widget.offer!.description;
       _originalPriceController.text = widget.offer!.originalPrice.toString();
       _offerPriceController.text = widget.offer!.offerPrice.toString();
-      _imageUrlController.text = widget.offer!.imageUrl ?? '';
-      _limitQuantityController.text = widget.offer!.limitQuantity?.toString() ?? '';
+      _limitQuantityController.text =
+          widget.offer!.limitQuantity?.toString() ?? '';
       _startDate = widget.offer!.startDate;
       _endDate = widget.offer!.endDate;
       _isActive = widget.offer!.isActive;
+      _imageBase64 = widget.offer!.image; // CHANGEMENT: récupération de l'image
     }
   }
 
@@ -48,9 +54,76 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
     _descriptionController.dispose();
     _originalPriceController.dispose();
     _offerPriceController.dispose();
-    _imageUrlController.dispose();
     _limitQuantityController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galerie'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    maxWidth: 800,
+                    maxHeight: 800,
+                    imageQuality: 80,
+                  );
+                  if (image != null) {
+                    final bytes = await image.readAsBytes();
+                    setState(() {
+                      _selectedImage = File(image.path);
+                      _imageBase64 = base64Encode(bytes);
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Appareil photo'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.camera,
+                    maxWidth: 800,
+                    maxHeight: 800,
+                    imageQuality: 80,
+                  );
+                  if (image != null) {
+                    final bytes = await image.readAsBytes();
+                    setState(() {
+                      _selectedImage = File(image.path);
+                      _imageBase64 = base64Encode(bytes);
+                    });
+                  }
+                },
+              ),
+              if (_selectedImage != null || _imageBase64 != null)
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Supprimer l\'image'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _selectedImage = null;
+                      _imageBase64 = null;
+                    });
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _selectStartDate() async {
@@ -109,15 +182,14 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
         description: _descriptionController.text.trim(),
         originalPrice: double.parse(_originalPriceController.text.trim()),
         offerPrice: double.parse(_offerPriceController.text.trim()),
-        imageUrl: _imageUrlController.text.trim().isEmpty 
-            ? null 
-            : _imageUrlController.text.trim(),
+        image: _imageBase64, // CHANGEMENT: envoi de l'image base64
         startDate: _startDate,
         endDate: _endDate,
         isActive: _isActive,
-        limitQuantity: _limitQuantityController.text.trim().isEmpty 
-            ? null 
-            : int.parse(_limitQuantityController.text.trim()),
+        limitQuantity:
+            _limitQuantityController.text.trim().isEmpty
+                ? null
+                : int.parse(_limitQuantityController.text.trim()),
         soldQuantity: widget.offer?.soldQuantity ?? 0,
       );
 
@@ -132,17 +204,18 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.offer == null 
+              widget.offer == null
                   ? 'Offre créée avec succès'
                   : 'Offre modifiée avec succès',
             ),
+            backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -156,20 +229,32 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.offer == null ? 'Nouvelle Offre' : 'Modifier l\'Offre'),
+        title: Text(
+          widget.offer == null ? 'Nouvelle Offre' : 'Modifier l\'Offre',
+        ),
         actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _saveOffer,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    'Enregistrer',
-                    style: TextStyle(color: Colors.white),
-                  ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton.icon(
+              onPressed: _isLoading ? null : _saveOffer,
+              icon:
+                  _isLoading
+                      ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                      : const Icon(Icons.save, color: Colors.white),
+              label: Text(
+                _isLoading ? 'Enregistrement...' : 'Enregistrer',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         ],
       ),
@@ -180,11 +265,62 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // En-tête
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.local_offer,
+                      size: 32,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.offer == null
+                                ? 'Créer une nouvelle offre'
+                                : 'Modifier l\'offre',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Configurez votre offre promotionnelle',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Informations de base
+              Text(
+                'Informations de base',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
                   labelText: 'Titre de l\'offre *',
-                  border: OutlineInputBorder(),
+                  hintText: 'Ex: Promotion spéciale livres de science-fiction',
+                  prefixIcon: Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -195,13 +331,17 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Description *',
-                  border: OutlineInputBorder(),
+                  hintText: 'Décrivez votre offre promotionnelle',
+                  prefixIcon: Icon(Icons.description),
+                  alignLabelWithHint: true,
                 ),
                 maxLines: 4,
                 validator: (value) {
@@ -210,8 +350,77 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Image de l'offre
+              Text(
+                'Image de l\'offre',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    if (_selectedImage != null || _imageBase64 != null)
+                      Container(
+                        height: 200,
+                        width: double.infinity,
+                        margin: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child:
+                              _selectedImage != null
+                                  ? Image.file(
+                                    _selectedImage!,
+                                    fit: BoxFit.cover,
+                                  )
+                                  : ImageHelper.buildImageFromBase64(
+                                    _imageBase64,
+                                    fit: BoxFit.cover,
+                                  ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: OutlinedButton.icon(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.add_a_photo),
+                        label: Text(
+                          _selectedImage != null || _imageBase64 != null
+                              ? 'Changer l\'image'
+                              : 'Ajouter une image',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Prix
+              Text(
+                'Tarification',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
               Row(
                 children: [
                   Expanded(
@@ -219,9 +428,12 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       controller: _originalPriceController,
                       decoration: const InputDecoration(
                         labelText: 'Prix original (€) *',
-                        border: OutlineInputBorder(),
+                        hintText: '29.99',
+                        prefixIcon: Icon(Icons.euro),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       onChanged: (value) => setState(() {}),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -233,6 +445,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                         }
                         return null;
                       },
+                      textInputAction: TextInputAction.next,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -241,75 +454,81 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       controller: _offerPriceController,
                       decoration: const InputDecoration(
                         labelText: 'Prix de l\'offre (€) *',
-                        border: OutlineInputBorder(),
+                        hintText: '19.99',
+                        prefixIcon: Icon(Icons.local_offer),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       onChanged: (value) => setState(() {}),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Le prix de l\'offre est requis';
                         }
                         final offerPrice = double.tryParse(value.trim());
-                        final originalPrice = double.tryParse(_originalPriceController.text.trim());
+                        final originalPrice = double.tryParse(
+                          _originalPriceController.text.trim(),
+                        );
                         if (offerPrice == null || offerPrice <= 0) {
                           return 'Le prix doit être supérieur à 0';
                         }
-                        if (originalPrice != null && offerPrice >= originalPrice) {
+                        if (originalPrice != null &&
+                            offerPrice >= originalPrice) {
                           return 'Le prix d\'offre doit être inférieur au prix original';
                         }
                         return null;
                       },
+                      textInputAction: TextInputAction.next,
                     ),
                   ),
                 ],
               ),
-              if (calculatedDiscount > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      border: Border.all(color: Colors.green),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'Remise: $calculatedDiscount%',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
+
+              if (calculatedDiscount > 0) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    border: Border.all(color: Colors.green),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.trending_down, color: Colors.green[700]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Remise: $calculatedDiscount%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[700],
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
+                      const Spacer(),
+                      Text(
+                        'Économie: ${(double.tryParse(_originalPriceController.text) ?? 0) - (double.tryParse(_offerPriceController.text) ?? 0)} €',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _imageUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'URL de l\'image',
-                  border: OutlineInputBorder(),
-                ),
+              ],
+
+              const SizedBox(height: 32),
+
+              // Période et quantité
+              Text(
+                'Conditions de l\'offre',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _limitQuantityController,
-                decoration: const InputDecoration(
-                  labelText: 'Quantité limitée (optionnel)',
-                  border: OutlineInputBorder(),
-                  helperText: 'Laissez vide pour une quantité illimitée',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value != null && value.trim().isNotEmpty) {
-                    final quantity = int.tryParse(value.trim());
-                    if (quantity == null || quantity <= 0) {
-                      return 'La quantité doit être positive';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+
               Row(
                 children: [
                   Expanded(
@@ -318,8 +537,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       child: InputDecorator(
                         decoration: const InputDecoration(
                           labelText: 'Date de début *',
-                          border: OutlineInputBorder(),
-                          suffixIcon: Icon(Icons.calendar_today),
+                          prefixIcon: Icon(Icons.calendar_today),
                         ),
                         child: Text(
                           DateFormat('dd/MM/yyyy').format(_startDate),
@@ -334,28 +552,131 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       child: InputDecorator(
                         decoration: const InputDecoration(
                           labelText: 'Date de fin *',
-                          border: OutlineInputBorder(),
-                          suffixIcon: Icon(Icons.calendar_today),
+                          prefixIcon: Icon(Icons.event),
                         ),
-                        child: Text(
-                          DateFormat('dd/MM/yyyy').format(_endDate),
-                        ),
+                        child: Text(DateFormat('dd/MM/yyyy').format(_endDate)),
                       ),
                     ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Offre active'),
-                subtitle: const Text('L\'offre est-elle disponible ?'),
-                value: _isActive,
-                onChanged: (value) {
-                  setState(() {
-                    _isActive = value;
-                  });
+
+              TextFormField(
+                controller: _limitQuantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Quantité limitée (optionnel)',
+                  hintText: 'Laissez vide pour une quantité illimitée',
+                  prefixIcon: Icon(Icons.inventory),
+                  helperText: 'Limite le nombre d\'articles en promotion',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value != null && value.trim().isNotEmpty) {
+                    final quantity = int.tryParse(value.trim());
+                    if (quantity == null || quantity <= 0) {
+                      return 'La quantité doit être positive';
+                    }
+                  }
+                  return null;
                 },
+                textInputAction: TextInputAction.done,
               ),
+
+              const SizedBox(height: 32),
+
+              // Statut
+              Text(
+                'Statut de l\'offre',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SwitchListTile(
+                  title: const Text('Offre active'),
+                  subtitle: Text(
+                    _isActive
+                        ? 'L\'offre est disponible et visible'
+                        : 'L\'offre est désactivée',
+                    style: TextStyle(
+                      color: _isActive ? Colors.green : Colors.red,
+                    ),
+                  ),
+                  value: _isActive,
+                  onChanged: (value) {
+                    setState(() {
+                      _isActive = value;
+                    });
+                  },
+                  secondary: Icon(
+                    _isActive ? Icons.visibility : Icons.visibility_off,
+                    color: _isActive ? Colors.green : Colors.red,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Boutons d'action
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _isLoading
+                              ? null
+                              : () {
+                                Navigator.of(context).pop();
+                              },
+                      child: const Text('Annuler'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveOffer,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      child:
+                          _isLoading
+                              ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Enregistrement...'),
+                                ],
+                              )
+                              : Text(
+                                widget.offer == null
+                                    ? 'Créer l\'offre'
+                                    : 'Modifier l\'offre',
+                              ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
             ],
           ),
         ),

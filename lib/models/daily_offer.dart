@@ -5,7 +5,7 @@ class DailyOffer {
   final double originalPrice;
   final double offerPrice;
   final int? discountPercentage;
-  final String? imageUrl;
+  final String? image; // CHANGEMENT: remplace imageUrl par image (base64)
   final DateTime startDate;
   final DateTime endDate;
   final bool isActive;
@@ -23,7 +23,7 @@ class DailyOffer {
     required this.originalPrice,
     required this.offerPrice,
     this.discountPercentage,
-    this.imageUrl,
+    this.image, // CHANGEMENT: image au lieu de imageUrl
     required this.startDate,
     required this.endDate,
     this.isActive = true,
@@ -43,7 +43,7 @@ class DailyOffer {
       originalPrice: (json['originalPrice'] ?? 0).toDouble(),
       offerPrice: (json['offerPrice'] ?? 0).toDouble(),
       discountPercentage: json['discountPercentage'],
-      imageUrl: json['imageUrl'],
+      image: json['image'], // CHANGEMENT: lecture du champ image
       startDate: DateTime.parse(json['startDate']),
       endDate: DateTime.parse(json['endDate']),
       isActive: json['isActive'] ?? true,
@@ -51,8 +51,10 @@ class DailyOffer {
       packId: json['packId'],
       limitQuantity: json['limitQuantity'],
       soldQuantity: json['soldQuantity'] ?? 0,
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
@@ -64,7 +66,7 @@ class DailyOffer {
       'originalPrice': originalPrice,
       'offerPrice': offerPrice,
       'discountPercentage': discountPercentage,
-      'imageUrl': imageUrl,
+      'image': image, // CHANGEMENT: envoi du champ image
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
       'isActive': isActive,
@@ -101,7 +103,7 @@ class DailyOffer {
     double? originalPrice,
     double? offerPrice,
     int? discountPercentage,
-    String? imageUrl,
+    String? image, // CHANGEMENT: image au lieu de imageUrl
     DateTime? startDate,
     DateTime? endDate,
     bool? isActive,
@@ -119,7 +121,7 @@ class DailyOffer {
       originalPrice: originalPrice ?? this.originalPrice,
       offerPrice: offerPrice ?? this.offerPrice,
       discountPercentage: discountPercentage ?? this.discountPercentage,
-      imageUrl: imageUrl ?? this.imageUrl,
+      image: image ?? this.image, // CHANGEMENT
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       isActive: isActive ?? this.isActive,
