@@ -5,48 +5,94 @@ class BookService {
   static const String endpoint = '/books';
 
   static Future<List<Book>> getAllBooks() async {
-    final response = await ApiService.get(endpoint);
-    final List<dynamic> data = ApiService.handleListResponse(response);
-    return data.map((json) => Book.fromJson(json)).toList();
+    try {
+      // Use the mobile-friendly endpoint that returns a direct list
+      final response = await ApiService.get('$endpoint/all');
+      final List<dynamic> data = ApiService.handleListResponse(response);
+
+      print('Parsed ${data.length} books from API');
+      return data.map((json) => Book.fromJson(json)).toList();
+    } catch (e) {
+      print('Error in getAllBooks: $e');
+      rethrow;
+    }
   }
 
   static Future<Book> getBookById(int id) async {
-    final response = await ApiService.get('$endpoint/$id');
-    final Map<String, dynamic> data = ApiService.handleResponse(response);
-    return Book.fromJson(data);
+    try {
+      final response = await ApiService.get('$endpoint/$id');
+      final Map<String, dynamic> data = ApiService.handleResponse(response);
+      return Book.fromJson(data);
+    } catch (e) {
+      print('Error in getBookById: $e');
+      rethrow;
+    }
   }
 
   static Future<Book> createBook(Book book) async {
-    final response = await ApiService.post(endpoint, book.toJson());
-    final Map<String, dynamic> data = ApiService.handleResponse(response);
-    return Book.fromJson(data);
+    try {
+      final response = await ApiService.post(endpoint, book.toJson());
+      final Map<String, dynamic> data = ApiService.handleResponse(response);
+      return Book.fromJson(data);
+    } catch (e) {
+      print('Error in createBook: $e');
+      rethrow;
+    }
   }
 
   static Future<Book> updateBook(Book book) async {
-    final response = await ApiService.put('$endpoint/${book.id}', book.toJson());
-    final Map<String, dynamic> data = ApiService.handleResponse(response);
-    return Book.fromJson(data);
+    try {
+      final response = await ApiService.put(
+        '$endpoint/${book.id}',
+        book.toJson(),
+      );
+      final Map<String, dynamic> data = ApiService.handleResponse(response);
+      return Book.fromJson(data);
+    } catch (e) {
+      print('Error in updateBook: $e');
+      rethrow;
+    }
   }
 
   static Future<void> deleteBook(int id) async {
-    await ApiService.delete('$endpoint/$id');
+    try {
+      await ApiService.delete('$endpoint/$id');
+    } catch (e) {
+      print('Error in deleteBook: $e');
+      rethrow;
+    }
   }
 
   static Future<List<Book>> searchBooks(String query) async {
-    final response = await ApiService.get('$endpoint/search?q=$query');
-    final List<dynamic> data = ApiService.handleListResponse(response);
-    return data.map((json) => Book.fromJson(json)).toList();
+    try {
+      final response = await ApiService.get('$endpoint/search?keyword=$query');
+      final List<dynamic> data = ApiService.handleListResponse(response);
+      return data.map((json) => Book.fromJson(json)).toList();
+    } catch (e) {
+      print('Error in searchBooks: $e');
+      rethrow;
+    }
   }
 
   static Future<List<Book>> getBooksByCategory(String category) async {
-    final response = await ApiService.get('$endpoint/category/$category');
-    final List<dynamic> data = ApiService.handleListResponse(response);
-    return data.map((json) => Book.fromJson(json)).toList();
+    try {
+      // For now, we'll filter on the client side since we don't have a category endpoint
+      final allBooks = await getAllBooks();
+      return allBooks.where((book) => book.category == category).toList();
+    } catch (e) {
+      print('Error in getBooksByCategory: $e');
+      rethrow;
+    }
   }
 
   static Future<List<Book>> getAvailableBooks() async {
-    final response = await ApiService.get('$endpoint/available');
-    final List<dynamic> data = ApiService.handleListResponse(response);
-    return data.map((json) => Book.fromJson(json)).toList();
+    try {
+      final response = await ApiService.get('$endpoint/available');
+      final List<dynamic> data = ApiService.handleListResponse(response);
+      return data.map((json) => Book.fromJson(json)).toList();
+    } catch (e) {
+      print('Error in getAvailableBooks: $e');
+      rethrow;
+    }
   }
 }

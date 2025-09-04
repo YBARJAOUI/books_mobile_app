@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/book.dart';
 import '../services/book_service.dart';
 
@@ -16,10 +19,11 @@ class _BookFormScreenState extends State<BookFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
-  final _isbnController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
-  final _stockController = TextEditingController();
+
+  File? _selectedImage;
+  String? _imageBase64;
 
   String _selectedLanguage = 'francais';
   String _selectedCategory = 'Fiction';
@@ -46,13 +50,12 @@ class _BookFormScreenState extends State<BookFormScreen> {
     if (widget.book != null) {
       _titleController.text = widget.book!.title;
       _authorController.text = widget.book!.author;
-      _isbnController.text = widget.book!.isbn;
       _descriptionController.text = widget.book!.description ?? '';
       _priceController.text = widget.book!.price.toString();
-      _stockController.text = widget.book!.stock.toString();
       _selectedLanguage = widget.book!.language;
       _selectedCategory = widget.book!.category;
       _isAvailable = widget.book!.isAvailable;
+      _imageBase64 = widget.book!.image;
     }
   }
 
@@ -60,11 +63,77 @@ class _BookFormScreenState extends State<BookFormScreen> {
   void dispose() {
     _titleController.dispose();
     _authorController.dispose();
-    _isbnController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    _stockController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galerie'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    maxWidth: 800,
+                    maxHeight: 800,
+                    imageQuality: 80,
+                  );
+                  if (image != null) {
+                    final bytes = await image.readAsBytes();
+                    setState(() {
+                      _selectedImage = File(image.path);
+                      _imageBase64 = base64Encode(bytes);
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Appareil photo'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.camera,
+                    maxWidth: 800,
+                    maxHeight: 800,
+                    imageQuality: 80,
+                  );
+                  if (image != null) {
+                    final bytes = await image.readAsBytes();
+                    setState(() {
+                      _selectedImage = File(image.path);
+                      _imageBase64 = base64Encode(bytes);
+                    });
+                  }
+                },
+              ),
+              if (_selectedImage != null || _imageBase64 != null)
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Supprimer l\'image'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _selectedImage = null;
+                      _imageBase64 = null;
+                    });
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _saveBook() async {
@@ -81,16 +150,15 @@ class _BookFormScreenState extends State<BookFormScreen> {
         id: widget.book?.id,
         title: _titleController.text.trim(),
         author: _authorController.text.trim(),
-        isbn: _isbnController.text.trim(),
         description:
             _descriptionController.text.trim().isEmpty
                 ? null
                 : _descriptionController.text.trim(),
         price: double.parse(_priceController.text.trim()),
-        stock: int.parse(_stockController.text.trim()),
         language: _selectedLanguage,
         category: _selectedCategory,
         isAvailable: _isAvailable,
+        image: _imageBase64,
       );
 
       if (widget.book == null) {
@@ -256,30 +324,6 @@ class _BookFormScreenState extends State<BookFormScreen> {
               const SizedBox(height: 16),
 
               TextFormField(
-                controller: _isbnController,
-                decoration: const InputDecoration(
-                  labelText: 'ISBN *',
-                  hintText: 'Entrez l\'ISBN du livre',
-                  prefixIcon: Icon(Icons.numbers),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'L\'ISBN est requis';
-                  }
-                  // Validation basique de l'ISBN
-                  final cleanIsbn = value
-                      .replaceAll('-', '')
-                      .replaceAll(' ', '');
-                  if (cleanIsbn.length != 10 && cleanIsbn.length != 13) {
-                    return 'L\'ISBN doit contenir 10 ou 13 chiffres';
-                  }
-                  return null;
-                },
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Description',
@@ -293,71 +337,95 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
               const SizedBox(height: 32),
 
-              // Prix et stock
+              // Image Section
               Text(
-                'Prix et inventaire',
+                'Image du livre',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _priceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Prix (€) *',
-                        hintText: '0.00',
-                        prefixIcon: Icon(Icons.euro),
-                      ),
-                      keyboardType: TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d+\.?\d{0,2}'),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    if (_selectedImage != null || _imageBase64 != null)
+                      Container(
+                        height: 200,
+                        width: double.infinity,
+                        margin: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image:
+                              _selectedImage != null
+                                  ? DecorationImage(
+                                    image: FileImage(_selectedImage!),
+                                    fit: BoxFit.cover,
+                                  )
+                                  : _imageBase64 != null
+                                  ? DecorationImage(
+                                    image: MemoryImage(
+                                      base64Decode(_imageBase64!),
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                  : null,
                         ),
-                      ],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Le prix est requis';
-                        }
-                        final price = double.tryParse(value.trim());
-                        if (price == null || price <= 0) {
-                          return 'Le prix doit être supérieur à 0';
-                        }
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _stockController,
-                      decoration: const InputDecoration(
-                        labelText: 'Stock *',
-                        hintText: '0',
-                        prefixIcon: Icon(Icons.inventory),
                       ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Le stock est requis';
-                        }
-                        final stock = int.tryParse(value.trim());
-                        if (stock == null || stock < 0) {
-                          return 'Le stock doit être positif';
-                        }
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: OutlinedButton.icon(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.add_a_photo),
+                        label: Text(
+                          _selectedImage != null || _imageBase64 != null
+                              ? 'Changer l\\image'
+                              : 'Ajouter une image',
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Prix
+              Text(
+                'Prix',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _priceController,
+                decoration: const InputDecoration(
+                  labelText: 'Prix (€) *',
+                  hintText: '0.00',
+                  prefixIcon: Icon(Icons.euro),
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Le prix est requis';
+                  }
+                  final price = double.tryParse(value.trim());
+                  if (price == null || price <= 0) {
+                    return 'Le prix doit être supérieur à 0';
+                  }
+                  return null;
+                },
+                textInputAction: TextInputAction.next,
               ),
 
               const SizedBox(height: 32),

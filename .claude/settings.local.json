@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(flutter:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\entity/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\dto/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\controller/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\service/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\service/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\repository/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\config/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\controller/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)",
+      "Read(C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend/**)"
     ],
     "deny": [],
     "ask": []

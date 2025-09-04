@@ -18,10 +18,12 @@ class _BooksScreenState extends State<BooksScreen> {
   String searchQuery = '';
   String selectedCategory = 'Tous';
 
+  // FIXED: Remove duplicates and ensure consistency
   final List<String> categories = [
     'Tous',
     'Fiction',
     'Non-Fiction',
+    'Science-Fiction', // This was the problematic duplicate
     'Science',
     'Histoire',
     'Philosophie',
@@ -30,6 +32,9 @@ class _BooksScreenState extends State<BooksScreen> {
     'Technologie',
     'Santé',
     'Jeunesse',
+    'Romance',
+    'Thriller',
+    'Fantasy',
   ];
 
   @override
@@ -47,6 +52,14 @@ class _BooksScreenState extends State<BooksScreen> {
       final loadedBooks = await BookService.getAllBooks();
       setState(() {
         books = loadedBooks;
+
+        // FIXED: Validate selectedCategory exists in books or reset to 'Tous'
+        final bookCategories = books.map((book) => book.category).toSet();
+        if (selectedCategory != 'Tous' &&
+            !bookCategories.contains(selectedCategory)) {
+          selectedCategory = 'Tous';
+        }
+
         _applyFilters();
       });
     } catch (e) {
@@ -71,8 +84,7 @@ class _BooksScreenState extends State<BooksScreen> {
           final matchesSearch =
               searchQuery.isEmpty ||
               book.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-              book.author.toLowerCase().contains(searchQuery.toLowerCase()) ||
-              book.isbn.toLowerCase().contains(searchQuery.toLowerCase());
+              book.author.toLowerCase().contains(searchQuery.toLowerCase());
 
           final matchesCategory =
               selectedCategory == 'Tous' || book.category == selectedCategory;
@@ -378,7 +390,9 @@ class _BooksScreenState extends State<BooksScreen> {
       padding: ResponsiveSpacing.getAllPadding(context),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,
-        childAspectRatio: 0.75,
+        childAspectRatio: _getResponsiveCardAspectRatio(
+          context,
+        ), // FIXED: Responsive aspect ratio
         crossAxisSpacing: ResponsiveSpacing.md,
         mainAxisSpacing: ResponsiveSpacing.md,
       ),
@@ -389,89 +403,197 @@ class _BooksScreenState extends State<BooksScreen> {
     );
   }
 
+  // FIXED: Dynamic aspect ratio based on screen size
+  double _getResponsiveCardAspectRatio(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth > 1200) {
+      return 0.8; // Desktop - taller cards
+    } else if (screenWidth > 768) {
+      return 0.75; // Tablet - medium cards
+    } else {
+      return 0.7; // Mobile - shorter cards for better fit
+    }
+  }
+
   Widget _buildBookCard(Book book) {
     return Card(
       clipBehavior: Clip.antiAlias,
+      elevation: 2,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // FIXED: Responsive image container
           Expanded(
-            flex: 3,
+            flex: ResponsiveLayout.isMobile(context) ? 2 : 3,
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(color: Colors.grey[200]),
               child:
-                  book.imageBase64 != null
-                      ? Image.memory(
-                        Uri.parse(book.imageBase64!).data!.contentAsBytes(),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.book, size: 48);
-                        },
-                      )
-                      : const Icon(Icons.book, size: 48),
+                  book.image != null && book.image!.isNotEmpty
+                      ? _buildBookImage(book.image!)
+                      : Icon(
+                        Icons.book,
+                        size: ResponsiveLayout.isMobile(context) ? 32 : 48,
+                        color: Colors.grey[400],
+                      ),
             ),
           ),
+          // FIXED: Responsive content section
           Expanded(
-            flex: 2,
+            flex: ResponsiveLayout.isMobile(context) ? 3 : 2,
             child: Padding(
               padding: EdgeInsets.all(ResponsiveSpacing.sm),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        book.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                  // Title and author - takes most space
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          book.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize:
+                                ResponsiveLayout.isMobile(context) ? 12 : 14,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: ResponsiveSpacing.xs),
-                      Text(
-                        book.author,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: ResponsiveSpacing.xs),
-                      Text(
-                        '${book.price.toStringAsFixed(2)} €',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                          fontSize: 14,
+                        SizedBox(height: ResponsiveSpacing.xs),
+                        Text(
+                          book.author,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize:
+                                ResponsiveLayout.isMobile(context) ? 10 : 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        onPressed:
-                            () => context.go(
-                              '/books/edit/${book.id}',
-                              extra: book.toJson(),
+                        SizedBox(height: ResponsiveSpacing.xs),
+                        // Category chip
+                        if (book.category.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
                             ),
-                        icon: const Icon(Icons.edit, size: 20),
-                        tooltip: 'Modifier',
-                      ),
-                      IconButton(
-                        onPressed: () => _deleteBook(book.id!),
-                        icon: const Icon(
-                          Icons.delete,
-                          color: Colors.red,
-                          size: 20,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              book.category,
+                              style: TextStyle(
+                                fontSize:
+                                    ResponsiveLayout.isMobile(context) ? 8 : 10,
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Price and stock info
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${book.price.toStringAsFixed(2)} €',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                            fontSize:
+                                ResponsiveLayout.isMobile(context) ? 12 : 14,
+                          ),
                         ),
-                        tooltip: 'Supprimer',
-                      ),
-                    ],
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    book.isAvailable
+                                        ? Colors.green
+                                        : Colors.red,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                book.isAvailable
+                                    ? 'Disponible'
+                                    : 'Indisponible',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize:
+                                      ResponsiveLayout.isMobile(context)
+                                          ? 8
+                                          : 9,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Action buttons
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          onPressed:
+                              () => context.go(
+                                '/books/edit/${book.id}',
+                                extra: book.toJson(),
+                              ),
+                          icon: Icon(
+                            Icons.edit,
+                            size: ResponsiveLayout.isMobile(context) ? 16 : 20,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          tooltip: 'Modifier',
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => _deleteBook(book.id!),
+                          icon: Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                            size: ResponsiveLayout.isMobile(context) ? 16 : 20,
+                          ),
+                          tooltip: 'Supprimer',
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -482,10 +604,42 @@ class _BooksScreenState extends State<BooksScreen> {
     );
   }
 
+  Widget _buildBookImage(String imageBase64) {
+    try {
+      if (imageBase64.startsWith('data:')) {
+        final uri = Uri.parse(imageBase64);
+        return Image.memory(
+          uri.data!.contentAsBytes(),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(
+              Icons.book,
+              size: ResponsiveLayout.isMobile(context) ? 32 : 48,
+              color: Colors.grey[400],
+            );
+          },
+        );
+      } else {
+        return Icon(
+          Icons.book,
+          size: ResponsiveLayout.isMobile(context) ? 32 : 48,
+          color: Colors.grey[400],
+        );
+      }
+    } catch (e) {
+      return Icon(
+        Icons.book,
+        size: ResponsiveLayout.isMobile(context) ? 32 : 48,
+        color: Colors.grey[400],
+      );
+    }
+  }
+
   Widget _buildBookListTile(Book book) {
     return Card(
       margin: EdgeInsets.only(bottom: ResponsiveSpacing.sm),
       child: ListTile(
+        contentPadding: EdgeInsets.all(ResponsiveSpacing.md),
         leading: Container(
           width: 50,
           height: 70,
@@ -494,16 +648,10 @@ class _BooksScreenState extends State<BooksScreen> {
             color: Colors.grey[200],
           ),
           child:
-              book.imageBase64 != null
+              book.image != null && book.image!.isNotEmpty
                   ? ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: Image.memory(
-                      Uri.parse(book.imageBase64!).data!.contentAsBytes(),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.book);
-                      },
-                    ),
+                    child: _buildBookImage(book.image!),
                   )
                   : const Icon(Icons.book),
         ),
@@ -518,6 +666,7 @@ class _BooksScreenState extends State<BooksScreen> {
           children: [
             Text('Auteur: ${book.author}'),
             Text('Prix: ${book.price.toStringAsFixed(2)} €'),
+            Text('Catégorie: ${book.category}'),
             Row(
               children: [
                 Container(
@@ -534,8 +683,6 @@ class _BooksScreenState extends State<BooksScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 10),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text('Stock: ${book.stock}'),
               ],
             ),
           ],

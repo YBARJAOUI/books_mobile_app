@@ -1,8 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/dashboard_service.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic> _statistics = {};
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatistics();
+  }
+
+  Future<void> _loadStatistics() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final stats = await DashboardService.getDashboardStatistics();
+      setState(() {
+        _statistics = stats;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+        // Données par défaut en cas d'erreur
+        _statistics = {
+          'totalBooks': 0,
+          'totalCustomers': 0,
+          'totalOrders': 0,
+          'totalPacks': 0,
+          'totalOffers': 0,
+          'totalRevenue': 0.0,
+        };
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,17 +61,71 @@ class DashboardScreen extends StatelessWidget {
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadStatistics,
+            tooltip: 'Actualiser',
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(screenWidth * 0.04),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: screenHeight * 0.03),
-            _buildStatsSection(context, screenWidth),
-          ],
-        ),
-      ),
+      body:
+          _isLoading
+              ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Chargement des statistiques...'),
+                  ],
+                ),
+              )
+              : SingleChildScrollView(
+                padding: EdgeInsets.all(screenWidth * 0.04),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_errorMessage != null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.orange),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Connexion au serveur',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Impossible de charger les données en temps réel. Utilisation des données par défaut.',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    SizedBox(height: screenHeight * 0.03),
+                    _buildStatsSection(context, screenWidth),
+                  ],
+                ),
+              ),
     );
   }
 
@@ -44,7 +143,7 @@ class DashboardScreen extends StatelessWidget {
           children: [
             _buildStatCard(
               'Livres',
-              '150',
+              _statistics['totalBooks']?.toString() ?? '0',
               Icons.book,
               Colors.blue,
               screenWidth,
@@ -52,7 +151,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             _buildStatCard(
               'Clients',
-              '85',
+              _statistics['totalCustomers']?.toString() ?? '0',
               Icons.people,
               Colors.green,
               screenWidth,
@@ -60,7 +159,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             _buildStatCard(
               'Commandes',
-              '23',
+              _statistics['totalOrders']?.toString() ?? '0',
               Icons.shopping_cart,
               Colors.orange,
               screenWidth,
@@ -68,7 +167,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             _buildStatCard(
               'Packs',
-              '12',
+              _statistics['totalPacks']?.toString() ?? '0',
               Icons.inventory,
               Colors.purple,
               screenWidth,
@@ -76,7 +175,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             _buildStatCard(
               'Offres',
-              '5',
+              _statistics['totalOffers']?.toString() ?? '0',
               Icons.local_offer,
               Colors.red,
               screenWidth,
@@ -84,7 +183,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             _buildStatCard(
               'Revenus',
-              '€2.4K',
+              _formatRevenue(_statistics['totalRevenue']),
               Icons.euro,
               Colors.teal,
               screenWidth,
@@ -94,6 +193,25 @@ class DashboardScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatRevenue(dynamic revenue) {
+    if (revenue == null) return '€0';
+
+    double amount = 0.0;
+    if (revenue is num) {
+      amount = revenue.toDouble();
+    } else if (revenue is String) {
+      amount = double.tryParse(revenue) ?? 0.0;
+    }
+
+    if (amount >= 1000000) {
+      return '€${(amount / 1000000).toStringAsFixed(1)}M';
+    } else if (amount >= 1000) {
+      return '€${(amount / 1000).toStringAsFixed(1)}K';
+    } else {
+      return '€${amount.toStringAsFixed(0)}';
+    }
   }
 
   Widget _buildStatCard(
