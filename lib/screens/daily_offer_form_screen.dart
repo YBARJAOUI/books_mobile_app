@@ -44,7 +44,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
       _startDate = widget.offer!.startDate;
       _endDate = widget.offer!.endDate;
       _isActive = widget.offer!.isActive;
-      _imageBase64 = widget.offer!.image; // CHANGEMENT: récupération de l'image
+      _imageBase64 = widget.offer!.image;
     }
   }
 
@@ -69,7 +69,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Galerie'),
+                title: const Text('المعرض'),
                 onTap: () async {
                   Navigator.of(context).pop();
                   final XFile? image = await picker.pickImage(
@@ -89,7 +89,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera),
-                title: const Text('Appareil photo'),
+                title: const Text('الكاميرا'),
                 onTap: () async {
                   Navigator.of(context).pop();
                   final XFile? image = await picker.pickImage(
@@ -110,7 +110,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
               if (_selectedImage != null || _imageBase64 != null)
                 ListTile(
                   leading: const Icon(Icons.delete),
-                  title: const Text('Supprimer l\'image'),
+                  title: const Text('حذف الصورة'),
                   onTap: () {
                     Navigator.of(context).pop();
                     setState(() {
@@ -182,7 +182,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
         description: _descriptionController.text.trim(),
         originalPrice: double.parse(_originalPriceController.text.trim()),
         offerPrice: double.parse(_offerPriceController.text.trim()),
-        image: _imageBase64, // CHANGEMENT: envoi de l'image base64
+        image: _imageBase64,
         startDate: _startDate,
         endDate: _endDate,
         isActive: _isActive,
@@ -205,8 +205,8 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
           SnackBar(
             content: Text(
               widget.offer == null
-                  ? 'Offre créée avec succès'
-                  : 'Offre modifiée avec succès',
+                  ? 'تم إنشاء العرض بنجاح'
+                  : 'تم تعديل العرض بنجاح',
             ),
             backgroundColor: Colors.green,
           ),
@@ -215,7 +215,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -229,9 +229,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.offer == null ? 'Nouvelle Offre' : 'Modifier l\'Offre',
-        ),
+        title: Text(widget.offer == null ? 'عرض جديد' : 'تعديل العرض'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
@@ -251,7 +249,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       )
                       : const Icon(Icons.save, color: Colors.white),
               label: Text(
-                _isLoading ? 'Enregistrement...' : 'Enregistrer',
+                _isLoading ? 'جارٍ الحفظ...' : 'حفظ',
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -265,7 +263,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // En-tête
+              // Header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -287,13 +285,13 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                         children: [
                           Text(
                             widget.offer == null
-                                ? 'Créer une nouvelle offre'
-                                : 'Modifier l\'offre',
+                                ? 'إنشاء عرض جديد'
+                                : 'تعديل العرض',
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'Configurez votre offre promotionnelle',
+                            'قم بتكوين عرضك الترويجي',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.grey[600]),
                           ),
@@ -306,9 +304,9 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
 
               const SizedBox(height: 24),
 
-              // Informations de base
+              // Basic Information
               Text(
-                'Informations de base',
+                'المعلومات الأساسية',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -318,16 +316,16 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Titre de l\'offre *',
-                  hintText: 'Ex: Promotion spéciale livres de science-fiction',
+                  labelText: 'عنوان العرض *',
+                  hintText: 'مثال: عرض خاص على كتب الخيال العلمي',
                   prefixIcon: Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Le titre est requis';
+                    return 'العنوان مطلوب';
                   }
                   if (value.trim().length < 2 || value.trim().length > 150) {
-                    return 'Le titre doit contenir entre 2 et 150 caractères';
+                    return 'يجب أن يحتوي العنوان على ما بين 2 و150 حرفًا';
                   }
                   return null;
                 },
@@ -338,15 +336,15 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Description *',
-                  hintText: 'Décrivez votre offre promotionnelle',
+                  labelText: 'الوصف *',
+                  hintText: 'صف عرضك الترويجي',
                   prefixIcon: Icon(Icons.description),
                   alignLabelWithHint: true,
                 ),
                 maxLines: 4,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'La description est requise';
+                    return 'الوصف مطلوب';
                   }
                   return null;
                 },
@@ -355,9 +353,9 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
 
               const SizedBox(height: 32),
 
-              // Image de l'offre
+              // Offer Image
               Text(
-                'Image de l\'offre',
+                'صورة العرض',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -401,8 +399,8 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                         icon: const Icon(Icons.add_a_photo),
                         label: Text(
                           _selectedImage != null || _imageBase64 != null
-                              ? 'Changer l\'image'
-                              : 'Ajouter une image',
+                              ? 'تغيير الصورة'
+                              : 'إضافة صورة',
                         ),
                       ),
                     ),
@@ -412,9 +410,9 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
 
               const SizedBox(height: 32),
 
-              // Prix
+              // Pricing
               Text(
-                'Tarification',
+                'التسعير',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -427,7 +425,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                     child: TextFormField(
                       controller: _originalPriceController,
                       decoration: const InputDecoration(
-                        labelText: 'Prix original (€) *',
+                        labelText: 'السعر الأصلي (€) *',
                         hintText: '29.99',
                         prefixIcon: Icon(Icons.euro),
                       ),
@@ -437,11 +435,11 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       onChanged: (value) => setState(() {}),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Le prix original est requis';
+                          return 'السعر الأصلي مطلوب';
                         }
                         final price = double.tryParse(value.trim());
                         if (price == null || price <= 0) {
-                          return 'Le prix doit être supérieur à 0';
+                          return 'يجب أن يكون السعر أكبر من 0';
                         }
                         return null;
                       },
@@ -453,7 +451,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                     child: TextFormField(
                       controller: _offerPriceController,
                       decoration: const InputDecoration(
-                        labelText: 'Prix de l\'offre (€) *',
+                        labelText: 'سعر العرض (€) *',
                         hintText: '19.99',
                         prefixIcon: Icon(Icons.local_offer),
                       ),
@@ -463,18 +461,18 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       onChanged: (value) => setState(() {}),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Le prix de l\'offre est requis';
+                          return 'سعر العرض مطلوب';
                         }
                         final offerPrice = double.tryParse(value.trim());
                         final originalPrice = double.tryParse(
                           _originalPriceController.text.trim(),
                         );
                         if (offerPrice == null || offerPrice <= 0) {
-                          return 'Le prix doit être supérieur à 0';
+                          return 'يجب أن يكون السعر أكبر من 0';
                         }
                         if (originalPrice != null &&
                             offerPrice >= originalPrice) {
-                          return 'Le prix d\'offre doit être inférieur au prix original';
+                          return 'يجب أن يكون سعر العرض أقل من السعر الأصلي';
                         }
                         return null;
                       },
@@ -498,7 +496,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       Icon(Icons.trending_down, color: Colors.green[700]),
                       const SizedBox(width: 8),
                       Text(
-                        'Remise: $calculatedDiscount%',
+                        'الخصم: $calculatedDiscount%',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.green[700],
@@ -507,7 +505,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        'Économie: ${(double.tryParse(_originalPriceController.text) ?? 0) - (double.tryParse(_offerPriceController.text) ?? 0)} €',
+                        'التوفير: ${(double.tryParse(_originalPriceController.text) ?? 0) - (double.tryParse(_offerPriceController.text) ?? 0)} €',
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           color: Colors.green[700],
@@ -520,9 +518,9 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
 
               const SizedBox(height: 32),
 
-              // Période et quantité
+              // Period and Quantity
               Text(
-                'Conditions de l\'offre',
+                'شروط العرض',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -536,7 +534,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       onTap: _selectStartDate,
                       child: InputDecorator(
                         decoration: const InputDecoration(
-                          labelText: 'Date de début *',
+                          labelText: 'تاريخ البدء *',
                           prefixIcon: Icon(Icons.calendar_today),
                         ),
                         child: Text(
@@ -551,7 +549,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                       onTap: _selectEndDate,
                       child: InputDecorator(
                         decoration: const InputDecoration(
-                          labelText: 'Date de fin *',
+                          labelText: 'تاريخ الانتهاء *',
                           prefixIcon: Icon(Icons.event),
                         ),
                         child: Text(DateFormat('dd/MM/yyyy').format(_endDate)),
@@ -566,17 +564,17 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
               TextFormField(
                 controller: _limitQuantityController,
                 decoration: const InputDecoration(
-                  labelText: 'Quantité limitée (optionnel)',
-                  hintText: 'Laissez vide pour une quantité illimitée',
+                  labelText: 'الكمية المحدودة (اختياري)',
+                  hintText: 'اتركه فارغًا لكمية غير محدودة',
                   prefixIcon: Icon(Icons.inventory),
-                  helperText: 'Limite le nombre d\'articles en promotion',
+                  helperText: 'يحدد عدد العناصر في العرض الترويجي',
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value != null && value.trim().isNotEmpty) {
                     final quantity = int.tryParse(value.trim());
                     if (quantity == null || quantity <= 0) {
-                      return 'La quantité doit être positive';
+                      return 'يجب أن تكون الكمية موجبة';
                     }
                   }
                   return null;
@@ -586,9 +584,9 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
 
               const SizedBox(height: 32),
 
-              // Statut
+              // Status
               Text(
-                'Statut de l\'offre',
+                'حالة العرض',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -601,11 +599,9 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('Offre active'),
+                  title: const Text('العرض نشط'),
                   subtitle: Text(
-                    _isActive
-                        ? 'L\'offre est disponible et visible'
-                        : 'L\'offre est désactivée',
+                    _isActive ? 'العرض متاح ومرئي' : 'العرض غير مفعل',
                     style: TextStyle(
                       color: _isActive ? Colors.green : Colors.red,
                     ),
@@ -625,7 +621,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
 
               const SizedBox(height: 32),
 
-              // Boutons d'action
+              // Action Buttons
               Row(
                 children: [
                   Expanded(
@@ -636,7 +632,7 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                               : () {
                                 Navigator.of(context).pop();
                               },
-                      child: const Text('Annuler'),
+                      child: const Text('إلغاء'),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -663,13 +659,13 @@ class _DailyOfferFormScreenState extends State<DailyOfferFormScreen> {
                                     ),
                                   ),
                                   SizedBox(width: 8),
-                                  Text('Enregistrement...'),
+                                  Text('جارٍ الحفظ...'),
                                 ],
                               )
                               : Text(
                                 widget.offer == null
-                                    ? 'Créer l\'offre'
-                                    : 'Modifier l\'offre',
+                                    ? 'إنشاء العرض'
+                                    : 'تعديل العرض',
                               ),
                     ),
                   ),

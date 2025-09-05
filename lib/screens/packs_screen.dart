@@ -47,20 +47,21 @@ class _PacksScreenState extends State<PacksScreen> {
   Future<void> _deletePack(int id) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmer la suppression'),
-        content: const Text('Êtes-vous sûr de vouloir supprimer ce pack ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Annuler'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirmer la suppression'),
+            content: const Text('Êtes-vous sûr de vouloir supprimer ce pack ?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Supprimer'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Supprimer'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
@@ -88,8 +89,12 @@ class _PacksScreenState extends State<PacksScreen> {
     }
     return packs.where((pack) {
       return pack.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          (pack.description?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false) ||
-          (pack.category?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false);
+          (pack.description?.toLowerCase().contains(
+                searchQuery.toLowerCase(),
+              ) ??
+              false) ||
+          (pack.category?.toLowerCase().contains(searchQuery.toLowerCase()) ??
+              false);
     }).toList();
   }
 
@@ -100,10 +105,7 @@ class _PacksScreenState extends State<PacksScreen> {
         title: const Text('Gestion des Packs'),
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            onPressed: _loadPacks,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: _loadPacks, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: Column(
@@ -115,7 +117,8 @@ class _PacksScreenState extends State<PacksScreen> {
                 Expanded(
                   child: TextField(
                     decoration: const InputDecoration(
-                      hintText: 'Rechercher par nom, description ou catégorie...',
+                      hintText:
+                          'Rechercher par nom, description ou catégorie...',
                       prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(),
                     ),
@@ -146,48 +149,56 @@ class _PacksScreenState extends State<PacksScreen> {
             ),
           ),
           Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredPacks.isEmpty
+            child:
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredPacks.isEmpty
                     ? const Center(
-                        child: Text(
-                          'Aucun pack trouvé',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                      )
+                      child: Text(
+                        'Aucun pack trouvé',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    )
                     : GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.8,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        itemCount: filteredPacks.length,
-                        itemBuilder: (context, index) {
-                          final pack = filteredPacks[index];
-                          return Card(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  height: 120,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(12),
-                                    ),
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.8,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                      itemCount: filteredPacks.length,
+                      itemBuilder: (context, index) {
+                        final pack = filteredPacks[index];
+                        return Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 120,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12),
                                   ),
-                                  child: pack.imageUrl != null
-                                      ? ClipRRect(
-                                          borderRadius: const BorderRadius.vertical(
-                                            top: Radius.circular(12),
-                                          ),
+                                ),
+                                child:
+                                    pack.imageUrl != null
+                                        ? ClipRRect(
+                                          borderRadius:
+                                              const BorderRadius.vertical(
+                                                top: Radius.circular(12),
+                                              ),
                                           child: Image.network(
                                             pack.imageUrl!,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) {
+                                            errorBuilder: (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) {
                                               return const Icon(
                                                 Icons.inventory,
                                                 size: 48,
@@ -196,130 +207,145 @@ class _PacksScreenState extends State<PacksScreen> {
                                             },
                                           ),
                                         )
-                                      : const Icon(
+                                        : const Icon(
                                           Icons.inventory,
                                           size: 48,
                                           color: Colors.grey,
                                         ),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        pack.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      if (pack.description != null)
                                         Text(
-                                          pack.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                          pack.description!,
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
                                           ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 4),
-                                        if (pack.description != null)
-                                          Text(
-                                            pack.description!,
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 12,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          '${pack.price.toStringAsFixed(2)} €',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.blue,
-                                          ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        '${pack.price.toStringAsFixed(2)} €',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blue,
                                         ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  pack.isActive
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              pack.isActive
+                                                  ? 'Actif'
+                                                  : 'Inactif',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                          if (pack.isFeatured) ...[
+                                            const SizedBox(width: 4),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 6,
-                                                vertical: 2,
-                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                color: pack.isActive 
-                                                    ? Colors.green 
-                                                    : Colors.red,
-                                                borderRadius: BorderRadius.circular(4),
+                                                color: Colors.orange,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                               ),
-                                              child: Text(
-                                                pack.isActive ? 'Actif' : 'Inactif',
-                                                style: const TextStyle(
+                                              child: const Text(
+                                                'Vedette',
+                                                style: TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 10,
                                                 ),
                                               ),
                                             ),
-                                            if (pack.isFeatured) ...[
-                                              const SizedBox(width: 4),
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 6,
-                                                  vertical: 2,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.orange,
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: const Text(
-                                                  'Vedette',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
                                           ],
-                                        ),
-                                        const Spacer(),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            IconButton(
-                                              onPressed: () async {
-                                                final result = await Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => PackFormScreen(
-                                                      pack: pack,
+                                        ],
+                                      ),
+                                      const Spacer(),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          IconButton(
+                                            onPressed: () async {
+                                              final result =
+                                                  await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) =>
+                                                              PackFormScreen(
+                                                                pack: pack,
+                                                              ),
                                                     ),
-                                                  ),
-                                                );
-                                                if (result == true) {
-                                                  _loadPacks();
-                                                }
-                                              },
-                                              icon: const Icon(Icons.edit, size: 20),
+                                                  );
+                                              if (result == true) {
+                                                _loadPacks();
+                                              }
+                                            },
+                                            icon: const Icon(
+                                              Icons.edit,
+                                              size: 20,
                                             ),
-                                            IconButton(
-                                              onPressed: () => _deletePack(pack.id!),
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                color: Colors.red,
-                                                size: 20,
-                                              ),
+                                          ),
+                                          IconButton(
+                                            onPressed:
+                                                () => _deletePack(pack.id!),
+                                            icon: const Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
+                                              size: 20,
                                             ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
           ),
         ],
       ),
