@@ -52,7 +52,7 @@ class _BooksScreenState extends State<BooksScreen> {
       final loadedBooks = await BookService.getAllBooks();
       setState(() {
         books = loadedBooks;
-        final bookCategories = books.map((book) => book.category).toSet();
+        final bookCategories = books.map((book) => book.categorie).toSet();
         if (selectedCategory != 'الكل' &&
             !bookCategories.contains(selectedCategory)) {
           selectedCategory = 'الكل';
@@ -81,10 +81,10 @@ class _BooksScreenState extends State<BooksScreen> {
           final matchesSearch =
               searchQuery.isEmpty ||
               book.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-              book.author.toLowerCase().contains(searchQuery.toLowerCase());
+              book.auteur.toLowerCase().contains(searchQuery.toLowerCase());
 
           final matchesCategory =
-              selectedCategory == 'الكل' || book.category == selectedCategory;
+              selectedCategory == 'الكل' || book.categorie == selectedCategory;
 
           return matchesSearch && matchesCategory;
         }).toList();
@@ -116,7 +116,7 @@ class _BooksScreenState extends State<BooksScreen> {
 
     if (confirmed == true) {
       try {
-        await BookService.deleteBook(id);
+        await BookService.deleteBook(book.title);
         _loadBooks();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -175,7 +175,7 @@ class _BooksScreenState extends State<BooksScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: ImageHelper.buildImageFromBase64(
-                          book.image,
+                          book.imageBase64,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -196,7 +196,7 @@ class _BooksScreenState extends State<BooksScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            book.author,
+                            book.auteur,
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
@@ -204,7 +204,7 @@ class _BooksScreenState extends State<BooksScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${book.price.toStringAsFixed(2)} €',
+                            '${book.prix.toStringAsFixed(2)} €',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.blue,
@@ -227,7 +227,7 @@ class _BooksScreenState extends State<BooksScreen> {
                         onPressed: () {
                           Navigator.pop(context);
                           context.go(
-                            '/books/edit/${book.id}',
+                            '/books/edit/${book.title}',
                             extra: book.toJson(),
                           );
                         },

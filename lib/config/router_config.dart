@@ -2,18 +2,11 @@ import 'package:go_router/go_router.dart';
 import '../screens/home_screen.dart';
 import '../screens/books_screen.dart';
 import '../screens/customers_screen.dart';
-import '../screens/orders_screen.dart';
-import '../screens/packs_screen.dart';
-import '../screens/daily_offers_screen.dart';
 import '../screens/book_form_screen.dart';
 import '../screens/customer_form_screen.dart';
-import '../screens/pack_form_screen.dart';
-import '../screens/daily_offer_form_screen.dart';
 import '../screens/dashbord.dart'; // Correction: dashbord au lieu de dashboard
 import '../models/book.dart';
 import '../models/customer.dart';
-import '../models/pack.dart';
-import '../models/daily_offer.dart'; // Ajout de l'import manquant
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -71,55 +64,6 @@ class AppRouter {
                           ? Customer.fromJson(customerJson)
                           : null;
                   return CustomerFormScreen(customer: customer);
-                },
-              ),
-            ],
-          ),
-          GoRoute(
-            path: '/orders',
-            name: 'orders',
-            builder: (context, state) => const OrdersScreen(),
-          ),
-          GoRoute(
-            path: '/packs',
-            name: 'packs',
-            builder: (context, state) => const PacksScreen(),
-            routes: [
-              GoRoute(
-                path: 'new',
-                name: 'pack-new',
-                builder: (context, state) => const PackFormScreen(),
-              ),
-              GoRoute(
-                path: 'edit/:id',
-                name: 'pack-edit',
-                builder: (context, state) {
-                  final packJson = state.extra as Map<String, dynamic>?;
-                  final pack =
-                      packJson != null ? Pack.fromJson(packJson) : null;
-                  return PackFormScreen(pack: pack);
-                },
-              ),
-            ],
-          ),
-          GoRoute(
-            path: '/daily-offers',
-            name: 'daily-offers',
-            builder: (context, state) => const DailyOffersScreen(),
-            routes: [
-              GoRoute(
-                path: 'new',
-                name: 'daily-offer-new',
-                builder: (context, state) => const DailyOfferFormScreen(),
-              ),
-              GoRoute(
-                path: 'edit/:id',
-                name: 'daily-offer-edit',
-                builder: (context, state) {
-                  final offerJson = state.extra as Map<String, dynamic>?;
-                  final offer =
-                      offerJson != null ? DailyOffer.fromJson(offerJson) : null;
-                  return DailyOfferFormScreen(offer: offer);
                 },
               ),
             ],

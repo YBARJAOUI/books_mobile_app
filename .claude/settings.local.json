@@ -33,7 +33,11 @@
       "Read(//c/Users/LENOVO/Desktop/younes/projet/website/book_store_backend/**)",
       "Read(//c/Users/LENOVO/Desktop/younes/projet/website/bookstore-app/**)",
       "Bash(curl:*)",
-      "Bash(./mvnw:*)"
+      "Bash(./mvnw:*)",
+      "Read(//c/Users/LENOVO/Desktop/younes/projet/booksproject/**)",
+      "Bash(find:*)",
+      "Read(//c/Users/LENOVO/Desktop/younes/projet/**)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

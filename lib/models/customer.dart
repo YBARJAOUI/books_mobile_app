@@ -1,109 +1,58 @@
 class Customer {
   final int? id;
-  final String firstName;
-  final String lastName;
-  final String email;
+  final String nom;
   final String phoneNumber;
   final String address;
-  final String? city;
-  final String? postalCode;
-  final String? country;
-  final bool isActive;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final String city;
+  final bool blacklisted;
 
   Customer({
     this.id,
-    required this.firstName,
-    required this.lastName,
-    required this.email,
+    required this.nom,
     required this.phoneNumber,
     required this.address,
-    this.city,
-    this.postalCode,
-    this.country,
-    this.isActive = true,
-    this.createdAt,
-    this.updatedAt,
+    required this.city,
+    this.blacklisted = false,
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
       id: json['id'],
-      firstName: json['firstName'] ?? '',
-      lastName: json['lastName'] ?? '',
-      email: json['email'] ?? '',
+      nom: json['nom'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
       address: json['address'] ?? '',
-      city: json['city'],
-      postalCode: json['postalCode'],
-      country: json['country'],
-      isActive: json['isActive'] ?? true,
-      createdAt: _parseDateTime(json['createdAt']),
-      updatedAt: _parseDateTime(json['updatedAt']),
+      city: json['city'] ?? '',
+      blacklisted: json['blacklisted'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
+      'nom': nom,
       'phoneNumber': phoneNumber,
       'address': address,
       'city': city,
-      'postalCode': postalCode,
-      'country': country,
-      'isActive': isActive,
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
+      'blacklisted': blacklisted,
     };
   }
 
-  String get fullName => '$firstName $lastName';
-
   Customer copyWith({
     int? id,
-    String? firstName,
-    String? lastName,
-    String? email,
+    String? nom,
     String? phoneNumber,
     String? address,
     String? city,
-    String? postalCode,
-    String? country,
-    bool? isActive,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    bool? blacklisted,
   }) {
     return Customer(
       id: id ?? this.id,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      email: email ?? this.email,
+      nom: nom ?? this.nom,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       address: address ?? this.address,
       city: city ?? this.city,
-      postalCode: postalCode ?? this.postalCode,
-      country: country ?? this.country,
-      isActive: isActive ?? this.isActive,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      blacklisted: blacklisted ?? this.blacklisted,
     );
   }
 
-  static DateTime? _parseDateTime(dynamic dateTime) {
-    if (dateTime == null) return null;
-    
-    try {
-      if (dateTime is String && dateTime.isNotEmpty) {
-        return DateTime.parse(dateTime);
-      }
-      return null;
-    } catch (e) {
-      print('Error parsing DateTime in Customer: $dateTime, error: $e');
-      return null;
-    }
-  }
 }

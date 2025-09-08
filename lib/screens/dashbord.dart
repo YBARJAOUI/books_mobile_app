@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../services/dashboard_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,23 +26,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final stats = await DashboardService.getDashboardStatistics();
+      // Simple static data since dashboard service is removed
       setState(() {
-        _statistics = stats;
+        _statistics = {
+          'totalBooks': 0,
+          'totalCustomers': 0,
+          'totalOrders': 0,
+        };
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
-        // بيانات افتراضية في حالة الخطأ
         _statistics = {
           'totalBooks': 0,
           'totalCustomers': 0,
           'totalOrders': 0,
-          'totalPacks': 0,
-          'totalOffers': 0,
-          'totalRevenue': 0.0,
         };
       });
     }

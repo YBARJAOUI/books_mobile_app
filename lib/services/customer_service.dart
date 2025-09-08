@@ -2,7 +2,7 @@ import '../models/customer.dart';
 import 'api_service.dart';
 
 class CustomerService {
-  static const String endpoint = '/customers';
+  static const String endpoint = '/clients';
 
   static Future<List<Customer>> getAllCustomers() async {
     try {
@@ -45,46 +45,4 @@ class CustomerService {
     await ApiService.delete('$endpoint/$id');
   }
 
-  static Future<List<Customer>> searchCustomers(String query) async {
-    try {
-      if (query.trim().isEmpty) {
-        return getAllCustomers();
-      }
-      
-      final encodedQuery = Uri.encodeQueryComponent(query);
-      final response = await ApiService.get('$endpoint/search?q=$encodedQuery');
-      final List<dynamic> data = ApiService.handleListResponse(response);
-      
-      return data.map((json) {
-        try {
-          return Customer.fromJson(json);
-        } catch (e) {
-          print('Error parsing customer in search: $json, error: $e');
-          return null;
-        }
-      }).where((customer) => customer != null).cast<Customer>().toList();
-    } catch (e) {
-      print('Error in searchCustomers: $e');
-      rethrow;
-    }
-  }
-
-  static Future<List<Customer>> getActiveCustomers() async {
-    try {
-      final response = await ApiService.get('$endpoint/active');
-      final List<dynamic> data = ApiService.handleListResponse(response);
-      
-      return data.map((json) {
-        try {
-          return Customer.fromJson(json);
-        } catch (e) {
-          print('Error parsing active customer: $json, error: $e');
-          return null;
-        }
-      }).where((customer) => customer != null).cast<Customer>().toList();
-    } catch (e) {
-      print('Error in getActiveCustomers: $e');
-      rethrow;
-    }
-  }
 }

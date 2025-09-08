@@ -3,9 +3,6 @@ import '../services/api_service.dart';
 import '../services/book_service.dart';
 import '../services/customer_service.dart';
 import '../services/order_service.dart';
-import '../services/pack_service.dart';
-import '../services/daily_offer_service.dart';
-import '../services/dashboard_service.dart';
 
 class DebugScreen extends StatefulWidget {
   const DebugScreen({super.key});
@@ -65,11 +62,6 @@ class _DebugScreenState extends State<DebugScreen> {
       return await ApiService.testConnection();
     });
 
-    // Test statistics
-    await _testEndpoint('Dashboard Stats', () async {
-      return await DashboardService.getDashboardStatistics();
-    });
-
     // Test books
     await _testEndpoint('Books', () async {
       return await BookService.getAllBooks();
@@ -83,16 +75,6 @@ class _DebugScreenState extends State<DebugScreen> {
     // Test orders
     await _testEndpoint('Orders', () async {
       return await OrderService.getAllOrders();
-    });
-
-    // Test packs
-    await _testEndpoint('Packs', () async {
-      return await PackService.getAllPacks();
-    });
-
-    // Test daily offers
-    await _testEndpoint('Daily Offers', () async {
-      return await DailyOfferService.getAllDailyOffers();
     });
 
     _addLog('🎉 All tests completed!');

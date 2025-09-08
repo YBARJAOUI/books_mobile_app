@@ -6,8 +6,7 @@ class BookService {
 
   static Future<List<Book>> getAllBooks() async {
     try {
-      // Use the mobile-friendly endpoint that returns a direct list
-      final response = await ApiService.get('$endpoint/all');
+      final response = await ApiService.get(endpoint);
       final List<dynamic> data = ApiService.handleListResponse(response);
 
       print('Parsed ${data.length} books from API');
@@ -18,13 +17,13 @@ class BookService {
     }
   }
 
-  static Future<Book> getBookById(int id) async {
+  static Future<Book> getBookByTitle(String title) async {
     try {
-      final response = await ApiService.get('$endpoint/$id');
+      final response = await ApiService.get('$endpoint/$title');
       final Map<String, dynamic> data = ApiService.handleResponse(response);
       return Book.fromJson(data);
     } catch (e) {
-      print('Error in getBookById: $e');
+      print('Error in getBookByTitle: $e');
       rethrow;
     }
   }
@@ -43,7 +42,7 @@ class BookService {
   static Future<Book> updateBook(Book book) async {
     try {
       final response = await ApiService.put(
-        '$endpoint/${book.id}',
+        '$endpoint/${book.title}',
         book.toJson(),
       );
       final Map<String, dynamic> data = ApiService.handleResponse(response);
@@ -54,44 +53,55 @@ class BookService {
     }
   }
 
-  static Future<void> deleteBook(int id) async {
+  static Future<void> deleteBook(String title) async {
     try {
-      await ApiService.delete('$endpoint/$id');
+      await ApiService.delete('$endpoint/$title');
     } catch (e) {
       print('Error in deleteBook: $e');
       rethrow;
     }
   }
 
-  static Future<List<Book>> searchBooks(String query) async {
+  static Future<List<Book>> searchByTitle(String title) async {
     try {
-      final response = await ApiService.get('$endpoint/search?keyword=$query');
+      final response = await ApiService.get('$endpoint/search/byTitle?title=$title');
       final List<dynamic> data = ApiService.handleListResponse(response);
       return data.map((json) => Book.fromJson(json)).toList();
     } catch (e) {
-      print('Error in searchBooks: $e');
+      print('Error in searchByTitle: $e');
       rethrow;
     }
   }
 
-  static Future<List<Book>> getBooksByCategory(String category) async {
+  static Future<List<Book>> searchByAuteur(String auteur) async {
     try {
-      // For now, we'll filter on the client side since we don't have a category endpoint
-      final allBooks = await getAllBooks();
-      return allBooks.where((book) => book.category == category).toList();
+      final response = await ApiService.get('$endpoint/search/byAuteur?auteur=$auteur');
+      final List<dynamic> data = ApiService.handleListResponse(response);
+      return data.map((json) => Book.fromJson(json)).toList();
     } catch (e) {
-      print('Error in getBooksByCategory: $e');
+      print('Error in searchByAuteur: $e');
       rethrow;
     }
   }
 
-  static Future<List<Book>> getAvailableBooks() async {
+  static Future<List<Book>> searchByCategorie(String categorie) async {
     try {
-      final response = await ApiService.get('$endpoint/available');
+      final response = await ApiService.get('$endpoint/search/byCategorie?categorie=$categorie');
       final List<dynamic> data = ApiService.handleListResponse(response);
       return data.map((json) => Book.fromJson(json)).toList();
     } catch (e) {
-      print('Error in getAvailableBooks: $e');
+      print('Error in searchByCategorie: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<Book>> searchByPrix(double prix) async {
+    try {
+      final response = await ApiService.get('$endpoint/search/byPrix?prix=$prix');
+      final List<dynamic> data = ApiService.handleListResponse(response);
+      return data.map((json) => Book.fromJson(json)).toList();
+    } catch (e) {
+      print('Error in searchByPrix: $e');
       rethrow;
     }
   }

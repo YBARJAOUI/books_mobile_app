@@ -32,18 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
       label: 'العملاء',
       route: '/customers',
     ),
-    NavigationItem(
-      icon: Icons.shopping_cart_outlined,
-      selectedIcon: Icons.shopping_cart,
-      label: 'الطلبات',
-      route: '/orders',
-    ),
-    NavigationItem(
-      icon: Icons.local_offer_outlined,
-      selectedIcon: Icons.local_offer,
-      label: 'العروض',
-      route: '/daily-offers',
-    ),
   ];
 
   int get _selectedIndex {

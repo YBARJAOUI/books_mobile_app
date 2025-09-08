@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.50.141:8080/api';
+  static const String baseUrl = 'http://localhost:8080/api';
   static const int timeoutSeconds = 30;
 
   static Map<String, String> get headers => {
