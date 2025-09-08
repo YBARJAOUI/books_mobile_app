@@ -43,24 +43,16 @@ class Order {
       orderNumber: json['orderNumber'] ?? '',
       customer: json['customer'] != null ? Customer.fromJson(json['customer']) : null,
       customerId: json['customerId'],
-      orderItems: json['orderItems'] != null 
-          ? (json['orderItems'] as List).map((item) => OrderItem.fromJson(item)).toList()
-          : [],
+      orderItems: _parseOrderItems(json['orderItems']),
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
-      status: OrderStatus.values.firstWhere(
-        (e) => e.name.toUpperCase() == json['status'],
-        orElse: () => OrderStatus.pending,
-      ),
-      paymentStatus: PaymentStatus.values.firstWhere(
-        (e) => e.name.toUpperCase() == json['paymentStatus'],
-        orElse: () => PaymentStatus.pending,
-      ),
+      status: _parseOrderStatus(json['status']),
+      paymentStatus: _parsePaymentStatus(json['paymentStatus']),
       notes: json['notes'],
       shippingAddress: json['shippingAddress'],
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
-      shippedAt: json['shippedAt'] != null ? DateTime.parse(json['shippedAt']) : null,
-      deliveredAt: json['deliveredAt'] != null ? DateTime.parse(json['deliveredAt']) : null,
+      createdAt: _parseDateTime(json['createdAt']),
+      updatedAt: _parseDateTime(json['updatedAt']),
+      shippedAt: _parseDateTime(json['shippedAt']),
+      deliveredAt: _parseDateTime(json['deliveredAt']),
     );
   }
 
@@ -142,5 +134,84 @@ class Order {
       shippedAt: shippedAt ?? this.shippedAt,
       deliveredAt: deliveredAt ?? this.deliveredAt,
     );
+  }
+
+  static OrderStatus _parseOrderStatus(dynamic status) {
+    if (status == null) return OrderStatus.pending;
+    
+    final statusStr = status.toString().toLowerCase();
+    switch (statusStr) {
+      case 'pending':
+        return OrderStatus.pending;
+      case 'confirmed':
+        return OrderStatus.confirmed;
+      case 'shipped':
+        return OrderStatus.shipped;
+      case 'delivered':
+        return OrderStatus.delivered;
+      case 'cancelled':
+        return OrderStatus.cancelled;
+      default:
+        print('Unknown order status: $status, defaulting to pending');
+        return OrderStatus.pending;
+    }
+  }
+
+  static PaymentStatus _parsePaymentStatus(dynamic paymentStatus) {
+    if (paymentStatus == null) return PaymentStatus.pending;
+    
+    final statusStr = paymentStatus.toString().toLowerCase();
+    switch (statusStr) {
+      case 'pending':
+        return PaymentStatus.pending;
+      case 'completed':
+        return PaymentStatus.completed;
+      case 'failed':
+        return PaymentStatus.failed;
+      case 'refunded':
+        return PaymentStatus.refunded;
+      default:
+        print('Unknown payment status: $paymentStatus, defaulting to pending');
+        return PaymentStatus.pending;
+    }
+  }
+
+  static DateTime? _parseDateTime(dynamic dateTime) {
+    if (dateTime == null) return null;
+    
+    try {
+      if (dateTime is String && dateTime.isNotEmpty) {
+        return DateTime.parse(dateTime);
+      }
+      return null;
+    } catch (e) {
+      print('Error parsing DateTime: $dateTime, error: $e');
+      return null;
+    }
+  }
+
+  static List<OrderItem> _parseOrderItems(dynamic orderItems) {
+    if (orderItems == null) return [];
+    
+    try {
+      if (orderItems is List) {
+        return orderItems
+            .map((item) {
+              try {
+                return OrderItem.fromJson(item);
+              } catch (e) {
+                print('Error parsing OrderItem: $item, error: $e');
+                return null;
+              }
+            })
+            .where((item) => item != null)
+            .cast<OrderItem>()
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error parsing order items list: $orderItems, error: $e');
+      return [];
+    }
   }
 }

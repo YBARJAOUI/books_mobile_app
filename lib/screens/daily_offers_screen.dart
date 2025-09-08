@@ -323,8 +323,8 @@ class _DailyOffersScreenState extends State<DailyOffersScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/daily-offers/new'),
-        child: const Icon(Icons.add),
         tooltip: 'Nouvelle offre',
+        child: const Icon(Icons.add),
       ),
     );
   }

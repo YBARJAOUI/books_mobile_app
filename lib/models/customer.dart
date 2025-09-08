@@ -39,8 +39,8 @@ class Customer {
       postalCode: json['postalCode'],
       country: json['country'],
       isActive: json['isActive'] ?? true,
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      createdAt: _parseDateTime(json['createdAt']),
+      updatedAt: _parseDateTime(json['updatedAt']),
     );
   }
 
@@ -91,5 +91,19 @@ class Customer {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  static DateTime? _parseDateTime(dynamic dateTime) {
+    if (dateTime == null) return null;
+    
+    try {
+      if (dateTime is String && dateTime.isNotEmpty) {
+        return DateTime.parse(dateTime);
+      }
+      return null;
+    } catch (e) {
+      print('Error parsing DateTime in Customer: $dateTime, error: $e');
+      return null;
+    }
   }
 }

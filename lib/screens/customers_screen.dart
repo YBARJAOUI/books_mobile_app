@@ -31,28 +31,39 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
     try {
       final loadedCustomers = await CustomerService.getAllCustomers();
-      setState(() {
-        customers = loadedCustomers;
-        _applyFilters();
-      });
-    } catch (e) {
       if (mounted) {
+        setState(() {
+          customers = loadedCustomers;
+          _applyFilters();
+        });
+      }
+    } catch (e) {
+      print('Error loading customers: $e');
+      if (mounted) {
+        setState(() {
+          customers = [];
+          _applyFilters();
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في تحميل العملاء: $e'),
+            content: Text('خطأ في تحميل العملاء: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: Colors.red,
             action: SnackBarAction(
               label: 'إعادة المحاولة',
               textColor: Colors.white,
               onPressed: _loadCustomers,
             ),
+            duration: const Duration(seconds: 5),
           ),
         );
       }
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 

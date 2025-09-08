@@ -5,9 +5,22 @@ class CustomerService {
   static const String endpoint = '/customers';
 
   static Future<List<Customer>> getAllCustomers() async {
-    final response = await ApiService.get(endpoint);
-    final List<dynamic> data = ApiService.handleListResponse(response);
-    return data.map((json) => Customer.fromJson(json)).toList();
+    try {
+      final response = await ApiService.get(endpoint);
+      final List<dynamic> data = ApiService.handleListResponse(response);
+      
+      return data.map((json) {
+        try {
+          return Customer.fromJson(json);
+        } catch (e) {
+          print('Error parsing customer: $json, error: $e');
+          return null;
+        }
+      }).where((customer) => customer != null).cast<Customer>().toList();
+    } catch (e) {
+      print('Error in getAllCustomers: $e');
+      rethrow;
+    }
   }
 
   static Future<Customer> getCustomerById(int id) async {
@@ -33,14 +46,45 @@ class CustomerService {
   }
 
   static Future<List<Customer>> searchCustomers(String query) async {
-    final response = await ApiService.get('$endpoint/search?q=$query');
-    final List<dynamic> data = ApiService.handleListResponse(response);
-    return data.map((json) => Customer.fromJson(json)).toList();
+    try {
+      if (query.trim().isEmpty) {
+        return getAllCustomers();
+      }
+      
+      final encodedQuery = Uri.encodeQueryComponent(query);
+      final response = await ApiService.get('$endpoint/search?q=$encodedQuery');
+      final List<dynamic> data = ApiService.handleListResponse(response);
+      
+      return data.map((json) {
+        try {
+          return Customer.fromJson(json);
+        } catch (e) {
+          print('Error parsing customer in search: $json, error: $e');
+          return null;
+        }
+      }).where((customer) => customer != null).cast<Customer>().toList();
+    } catch (e) {
+      print('Error in searchCustomers: $e');
+      rethrow;
+    }
   }
 
   static Future<List<Customer>> getActiveCustomers() async {
-    final response = await ApiService.get('$endpoint/active');
-    final List<dynamic> data = ApiService.handleListResponse(response);
-    return data.map((json) => Customer.fromJson(json)).toList();
+    try {
+      final response = await ApiService.get('$endpoint/active');
+      final List<dynamic> data = ApiService.handleListResponse(response);
+      
+      return data.map((json) {
+        try {
+          return Customer.fromJson(json);
+        } catch (e) {
+          print('Error parsing active customer: $json, error: $e');
+          return null;
+        }
+      }).where((customer) => customer != null).cast<Customer>().toList();
+    } catch (e) {
+      print('Error in getActiveCustomers: $e');
+      rethrow;
+    }
   }
 }

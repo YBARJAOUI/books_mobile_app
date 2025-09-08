@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.50.198:8080/api';
+  static const String baseUrl = 'http://192.168.50.141:8080/api';
   static const int timeoutSeconds = 30;
 
   static Map<String, String> get headers => {
@@ -66,13 +66,19 @@ class ApiService {
       _logRequest('POST', endpoint, response.statusCode);
       return response;
     } on SocketException catch (e) {
+      print('SocketException in POST: $e');
       throw Exception(
         'Impossible de se connecter au serveur. Vérifiez que le serveur est démarré sur $baseUrl\n'
         'Détails: ${e.message}',
       );
     } on http.ClientException catch (e) {
+      print('ClientException in POST: $e');
       throw Exception('Erreur de connexion réseau: ${e.message}');
+    } on FormatException catch (e) {
+      print('FormatException in POST: $e');
+      throw Exception('Erreur de format des données: ${e.message}');
     } catch (e) {
+      print('Generic Exception in POST: $e');
       throw Exception('Erreur de connexion: $e');
     }
   }
@@ -99,13 +105,19 @@ class ApiService {
       _logRequest('PUT', endpoint, response.statusCode);
       return response;
     } on SocketException catch (e) {
+      print('SocketException in PUT: $e');
       throw Exception(
         'Impossible de se connecter au serveur. Vérifiez que le serveur est démarré sur $baseUrl\n'
         'Détails: ${e.message}',
       );
     } on http.ClientException catch (e) {
+      print('ClientException in PUT: $e');
       throw Exception('Erreur de connexion réseau: ${e.message}');
+    } on FormatException catch (e) {
+      print('FormatException in PUT: $e');
+      throw Exception('Erreur de format des données: ${e.message}');
     } catch (e) {
+      print('Generic Exception in PUT: $e');
       throw Exception('Erreur de connexion: $e');
     }
   }
@@ -129,13 +141,19 @@ class ApiService {
       _logRequest('DELETE', endpoint, response.statusCode);
       return response;
     } on SocketException catch (e) {
+      print('SocketException in DELETE: $e');
       throw Exception(
         'Impossible de se connecter au serveur. Vérifiez que le serveur est démarré sur $baseUrl\n'
         'Détails: ${e.message}',
       );
     } on http.ClientException catch (e) {
+      print('ClientException in DELETE: $e');
       throw Exception('Erreur de connexion réseau: ${e.message}');
+    } on FormatException catch (e) {
+      print('FormatException in DELETE: $e');
+      throw Exception('Erreur de format: ${e.message}');
     } catch (e) {
+      print('Generic Exception in DELETE: $e');
       throw Exception('Erreur de connexion: $e');
     }
   }
@@ -157,90 +175,99 @@ class ApiService {
           }
         } catch (e) {
           print('JSON decode error: $e');
-          throw Exception('Réponse du serveur invalide: ${response.body}');
+          print('Raw response body: ${response.body}');
+          throw Exception('Réponse du serveur invalide - JSON malformé');
         }
       }
       return {};
     } else {
-      String errorMessage = 'Erreur ${response.statusCode}';
+      String errorMessage = _getStatusMessage(response.statusCode);
 
       try {
         if (response.body.isNotEmpty) {
           final errorData = jsonDecode(response.body);
-          if (errorData is Map && errorData.containsKey('message')) {
-            errorMessage = errorData['message'];
-          } else if (errorData is Map && errorData.containsKey('error')) {
-            errorMessage = errorData['error'];
-          } else {
-            errorMessage = response.body;
+          if (errorData is Map) {
+            if (errorData.containsKey('message') && errorData['message'] != null) {
+              errorMessage = errorData['message'].toString();
+            } else if (errorData.containsKey('error') && errorData['error'] != null) {
+              errorMessage = errorData['error'].toString();
+            } else if (errorData.containsKey('details')) {
+              errorMessage = errorData['details'].toString();
+            }
+          } else if (errorData is String) {
+            errorMessage = errorData;
           }
         }
       } catch (e) {
-        errorMessage = _getStatusMessage(response.statusCode);
+        print('Error parsing error response: $e');
       }
 
       throw Exception(errorMessage);
     }
   }
 
-  // FIXED: Better handling for paginated and list responses
   static List<dynamic> handleListResponse(http.Response response) {
     print('Response status: ${response.statusCode}');
-    print(
-      'Response body (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}...',
-    );
+    final bodyPreview = response.body.length > 500 
+        ? '${response.body.substring(0, 500)}...' 
+        : response.body;
+    print('Response body preview: $bodyPreview');
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isNotEmpty) {
         try {
           final decoded = jsonDecode(response.body);
 
-          // Handle different response formats
           if (decoded is List) {
-            // Direct list response
+            print('Found direct list response with ${decoded.length} items');
             return decoded;
           } else if (decoded is Map<String, dynamic>) {
-            // Check for paginated response (Spring Boot Page format)
+            // Spring Boot Page format
             if (decoded.containsKey('content') && decoded['content'] is List) {
-              print(
-                'Found paginated response with ${decoded['content'].length} items',
-              );
-              return decoded['content'] as List;
+              final content = decoded['content'] as List;
+              print('Found paginated response with ${content.length} items');
+              print('Total elements: ${decoded['totalElements'] ?? 'unknown'}');
+              return content;
             }
-            // Check for data wrapper
+            // Generic data wrapper
             else if (decoded.containsKey('data') && decoded['data'] is List) {
-              return decoded['data'] as List;
+              final data = decoded['data'] as List;
+              print('Found wrapped response with ${data.length} items');
+              return data;
             }
-            // Single item response - wrap in list
+            // Single item - wrap in list
             else {
+              print('Single item response, wrapping in list');
               return [decoded];
             }
           } else {
-            // Single primitive value - wrap in list
+            print('Primitive value response, wrapping in list');
             return [decoded];
           }
         } catch (e) {
-          print('JSON decode error: $e');
-          throw Exception('Réponse du serveur invalide: ${response.body}');
+          print('JSON decode error in handleListResponse: $e');
+          print('Raw response body: ${response.body}');
+          throw Exception('Réponse du serveur invalide - JSON malformé');
         }
       }
+      print('Empty response body, returning empty list');
       return [];
     } else {
-      String errorMessage = 'Erreur ${response.statusCode}';
+      String errorMessage = _getStatusMessage(response.statusCode);
 
       try {
         if (response.body.isNotEmpty) {
           final errorData = jsonDecode(response.body);
-          if (errorData is Map && errorData.containsKey('message')) {
-            errorMessage = errorData['message'];
-          } else if (errorData is Map && errorData.containsKey('error')) {
-            errorMessage = errorData['error'];
-          } else {
-            errorMessage = response.body;
+          if (errorData is Map) {
+            if (errorData.containsKey('message') && errorData['message'] != null) {
+              errorMessage = errorData['message'].toString();
+            } else if (errorData.containsKey('error') && errorData['error'] != null) {
+              errorMessage = errorData['error'].toString();
+            }
           }
         }
       } catch (e) {
-        errorMessage = _getStatusMessage(response.statusCode);
+        print('Error parsing list error response: $e');
       }
 
       throw Exception(errorMessage);
@@ -283,23 +310,64 @@ class ApiService {
   static Future<bool> testConnection() async {
     try {
       print('Testing connection to: $baseUrl/health');
-      final response = await get(
-        '/health',
-      ).timeout(const Duration(seconds: 10));
+      final response = await get('/health').timeout(const Duration(seconds: 10));
       print('Connection test result: ${response.statusCode}');
-      return response.statusCode == 200;
+      return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
-      print('Connection test failed: $e');
-      return false;
+      print('Health endpoint failed, trying alternative endpoints...');
+      try {
+        final response = await get('/customers').timeout(const Duration(seconds: 5));
+        print('Customers endpoint test result: ${response.statusCode}');
+        return response.statusCode >= 200 && response.statusCode < 500;
+      } catch (e2) {
+        print('Connection test completely failed: $e2');
+        return false;
+      }
     }
   }
 
   static Future<String> checkServerStatus() async {
     try {
+      print('Checking server status...');
       final isConnected = await testConnection();
-      return isConnected ? 'Serveur accessible' : 'Serveur inaccessible';
+      return isConnected 
+          ? 'Serveur accessible sur $baseUrl' 
+          : 'Serveur inaccessible sur $baseUrl';
     } catch (e) {
-      return 'Serveur inaccessible: $e';
+      return 'Erreur de connexion: ${e.toString().replaceAll('Exception: ', '')}';
+    }
+  }
+
+  static Future<Map<String, dynamic>> getConnectionInfo() async {
+    final startTime = DateTime.now();
+    
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/health'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+      
+      final endTime = DateTime.now();
+      final latency = endTime.difference(startTime).inMilliseconds;
+      
+      return {
+        'connected': response.statusCode >= 200 && response.statusCode < 300,
+        'statusCode': response.statusCode,
+        'latency': latency,
+        'server': baseUrl,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+    } catch (e) {
+      final endTime = DateTime.now();
+      final latency = endTime.difference(startTime).inMilliseconds;
+      
+      return {
+        'connected': false,
+        'error': e.toString(),
+        'latency': latency,
+        'server': baseUrl,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
     }
   }
 }

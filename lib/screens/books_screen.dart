@@ -96,9 +96,7 @@ class _BooksScreenState extends State<BooksScreen> {
       builder:
           (context) => AlertDialog(
             title: const Text('تأكيد الحذف'),
-            content: const Text(
-              'هل أنت متأكد من أنك تريد حذف هذا الكتاب؟',
-            ),
+            content: const Text('هل أنت متأكد من أنك تريد حذف هذا الكتاب؟'),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -110,10 +108,7 @@ class _BooksScreenState extends State<BooksScreen> {
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text(
-                  'حذف',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: const Text('حذف', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -302,8 +297,8 @@ class _BooksScreenState extends State<BooksScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/books/new'),
-        child: const Icon(Icons.add),
         tooltip: 'إضافة كتاب',
+        child: const Icon(Icons.add),
       ),
     );
   }

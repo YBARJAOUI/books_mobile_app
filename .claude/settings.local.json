@@ -29,7 +29,11 @@
       "Read(/C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\entity/**)",
       "Read(/C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\entity/**)",
       "Read(/C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\controller/**)",
-      "Read(/C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\controller/**)"
+      "Read(/C:\\Users\\LENOVO\\Desktop\\younes\\projet\\website\\book_store_backend\\src\\main\\java\\com\\example\\book_store_backend\\controller/**)",
+      "Read(//c/Users/LENOVO/Desktop/younes/projet/website/book_store_backend/**)",
+      "Read(//c/Users/LENOVO/Desktop/younes/projet/website/bookstore-app/**)",
+      "Bash(curl:*)",
+      "Bash(./mvnw:*)"
     ],
     "deny": [],
     "ask": []
