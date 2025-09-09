@@ -1,69 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../models/book.dart';
-import '../services/book_service.dart';
+import '../models/offer.dart';
+import '../services/offer_service.dart';
 import '../utils/responsive_layout.dart';
 import '../utils/image_helper.dart';
 
-class BooksScreen extends StatefulWidget {
-  const BooksScreen({super.key});
+class OffersScreen extends StatefulWidget {
+  const OffersScreen({super.key});
 
   @override
-  State<BooksScreen> createState() => _BooksScreenState();
+  State<OffersScreen> createState() => _OffersScreenState();
 }
 
-class _BooksScreenState extends State<BooksScreen> {
-  List<Book> books = [];
-  List<Book> filteredBooks = [];
+class _OffersScreenState extends State<OffersScreen> {
+  List<Offer> offers = [];
+  List<Offer> filteredOffers = [];
   bool isLoading = false;
   String searchQuery = '';
-  String selectedCategory = 'الكل';
-
-  final List<String> categories = [
-    'الكل',
-    'رواية',
-    'غير روائي',
-    'خيال علمي',
-    'علوم',
-    'تاريخ',
-    'فلسفة',
-    'فن',
-    'طبخ',
-    'تكنولوجيا',
-    'صحة',
-    'شباب',
-    'رومانسية',
-    'مثيرة',
-    'خيال',
-  ];
+  bool showAvailableOnly = false;
 
   @override
   void initState() {
     super.initState();
-    _loadBooks();
+    _loadOffers();
   }
 
-  Future<void> _loadBooks() async {
+  Future<void> _loadOffers() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      final loadedBooks = await BookService.getAllBooks();
+      final loadedOffers = await OfferService.getAllOffers();
       setState(() {
-        books = loadedBooks;
-        final bookCategories = books.map((book) => book.categorie).toSet();
-        if (selectedCategory != 'الكل' &&
-            !bookCategories.contains(selectedCategory)) {
-          selectedCategory = 'الكل';
-        }
+        offers = loadedOffers;
         _applyFilters();
       });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في تحميل الكتب: $e'),
+            content: Text('خطأ في تحميل العروض: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -76,27 +53,29 @@ class _BooksScreenState extends State<BooksScreen> {
   }
 
   void _applyFilters() {
-    filteredBooks =
-        books.where((book) {
+    filteredOffers =
+        offers.where((offer) {
           final matchesSearch =
               searchQuery.isEmpty ||
-              book.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-              book.auteur.toLowerCase().contains(searchQuery.toLowerCase());
+              offer.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
+              (offer.description?.toLowerCase().contains(
+                    searchQuery.toLowerCase(),
+                  ) ??
+                  false);
 
-          final matchesCategory =
-              selectedCategory == 'الكل' || book.categorie == selectedCategory;
+          final matchesAvailability = !showAvailableOnly || offer.available;
 
-          return matchesSearch && matchesCategory;
+          return matchesSearch && matchesAvailability;
         }).toList();
   }
 
-  Future<void> _deleteBook(String title) async {
+  Future<void> _deleteOffer(String title) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (context) => AlertDialog(
             title: const Text('تأكيد الحذف'),
-            content: const Text('هل أنت متأكد من أنك تريد حذف هذا الكتاب؟'),
+            content: const Text('هل أنت متأكد من أنك تريد حذف هذا العرض؟'),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -116,12 +95,12 @@ class _BooksScreenState extends State<BooksScreen> {
 
     if (confirmed == true) {
       try {
-        await BookService.deleteBook(title);
-        _loadBooks();
+        await OfferService.deleteOffer(title);
+        _loadOffers();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('تم حذف الكتاب بنجاح'),
+              content: Text('تم حذف العرض بنجاح'),
               backgroundColor: Colors.green,
             ),
           );
@@ -139,7 +118,7 @@ class _BooksScreenState extends State<BooksScreen> {
     }
   }
 
-  void _showBookActions(Book book) {
+  void _showOfferActions(Offer offer) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -162,7 +141,7 @@ class _BooksScreenState extends State<BooksScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Book info
+                // Offer info
                 Row(
                   children: [
                     Container(
@@ -175,7 +154,7 @@ class _BooksScreenState extends State<BooksScreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: ImageHelper.buildImageFromBase64(
-                          book.imageBase64,
+                          offer.imageBase64,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -186,7 +165,7 @@ class _BooksScreenState extends State<BooksScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            book.title,
+                            offer.title,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -195,19 +174,22 @@ class _BooksScreenState extends State<BooksScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            book.auteur,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
+                          if (offer.description != null)
+                            Text(
+                              offer.description!,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
                           const SizedBox(height: 4),
                           Text(
-                            '${book.prix.toStringAsFixed(2)} €',
+                            '${offer.prix.toStringAsFixed(2)} €',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                              color: Colors.green,
                               fontSize: 16,
                             ),
                           ),
@@ -227,8 +209,8 @@ class _BooksScreenState extends State<BooksScreen> {
                         onPressed: () {
                           Navigator.pop(context);
                           context.go(
-                            '/books/edit/${book.title}',
-                            extra: book.toJson(),
+                            '/offers/edit/${offer.title}',
+                            extra: offer.toJson(),
                           );
                         },
                         icon: const Icon(Icons.edit),
@@ -243,7 +225,7 @@ class _BooksScreenState extends State<BooksScreen> {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           Navigator.pop(context);
-                          _deleteBook(book.title);
+                          _deleteOffer(offer.title);
                         },
                         icon: const Icon(Icons.delete),
                         label: const Text('حذف'),
@@ -278,11 +260,11 @@ class _BooksScreenState extends State<BooksScreen> {
       appBar:
           ResponsiveLayout.isMobile(context)
               ? AppBar(
-                title: const Text('معرض الكتب'),
+                title: const Text('العروض الخاصة'),
                 automaticallyImplyLeading: false,
                 actions: [
                   IconButton(
-                    onPressed: _loadBooks,
+                    onPressed: _loadOffers,
                     icon: const Icon(Icons.refresh),
                     tooltip: 'تحديث',
                   ),
@@ -292,12 +274,12 @@ class _BooksScreenState extends State<BooksScreen> {
       body: Column(
         children: [
           _buildFiltersSection(),
-          Expanded(child: _buildBooksGallery()),
+          Expanded(child: _buildOffersGallery()),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/books/new'),
-        tooltip: 'إضافة كتاب',
+        onPressed: () => context.go('/offers/new'),
+        tooltip: 'إضافة عرض',
         child: const Icon(Icons.add),
       ),
     );
@@ -321,7 +303,7 @@ class _BooksScreenState extends State<BooksScreen> {
           // Search bar
           TextField(
             decoration: InputDecoration(
-              hintText: 'ابحث بالعنوان أو المؤلف...',
+              hintText: 'ابحث بالعنوان أو الوصف...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -342,42 +324,24 @@ class _BooksScreenState extends State<BooksScreen> {
           // Filters and stats
           Row(
             children: [
-              // Category filter
-              Expanded(
-                flex: 2,
-                child: DropdownButtonFormField<String>(
-                  value: selectedCategory,
-                  decoration: InputDecoration(
-                    labelText: 'الفئة',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  items:
-                      categories.map((category) {
-                        return DropdownMenuItem(
-                          value: category,
-                          child: Text(category),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCategory = value!;
-                      _applyFilters();
-                    });
-                  },
-                ),
+              // Available filter
+              FilterChip(
+                label: const Text('المتوفرة فقط'),
+                selected: showAvailableOnly,
+                onSelected: (selected) {
+                  setState(() {
+                    showAvailableOnly = selected;
+                    _applyFilters();
+                  });
+                },
+                backgroundColor: Colors.white,
+                selectedColor: Colors.green.withOpacity(0.2),
+                checkmarkColor: Colors.green,
               ),
 
-              const SizedBox(width: 16),
+              const Spacer(),
 
-              // Book count
+              // Offer count
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -391,7 +355,7 @@ class _BooksScreenState extends State<BooksScreen> {
                   ),
                 ),
                 child: Text(
-                  '${filteredBooks.length} كتاب',
+                  '${filteredOffers.length} عرض',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).primaryColor,
@@ -405,7 +369,7 @@ class _BooksScreenState extends State<BooksScreen> {
     );
   }
 
-  Widget _buildBooksGallery() {
+  Widget _buildOffersGallery() {
     if (isLoading) {
       return const Center(
         child: Column(
@@ -413,36 +377,32 @@ class _BooksScreenState extends State<BooksScreen> {
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('تحميل الكتب...'),
+            Text('تحميل العروض...'),
           ],
         ),
       );
     }
 
-    if (filteredBooks.isEmpty) {
+    if (filteredOffers.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.photo_library_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.local_offer_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              searchQuery.isNotEmpty || selectedCategory != 'الكل'
-                  ? 'لم يتم العثور على أي كتاب بهذه المعايير'
-                  : 'لا توجد كتب',
+              searchQuery.isNotEmpty || showAvailableOnly
+                  ? 'لم يتم العثور على أي عرض بهذه المعايير'
+                  : 'لا توجد عروض',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => context.go('/books/new'),
+              onPressed: () => context.go('/offers/new'),
               icon: const Icon(Icons.add),
-              label: const Text('إضافة أول كتاب'),
+              label: const Text('إضافة أول عرض'),
             ),
           ],
         ),
@@ -457,17 +417,17 @@ class _BooksScreenState extends State<BooksScreen> {
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
-      itemCount: filteredBooks.length,
+      itemCount: filteredOffers.length,
       itemBuilder: (context, index) {
-        final book = filteredBooks[index];
-        return _buildBookPhoto(book);
+        final offer = filteredOffers[index];
+        return _buildOfferCard(offer);
       },
     );
   }
 
-  Widget _buildBookPhoto(Book book) {
+  Widget _buildOfferCard(Offer offer) {
     return GestureDetector(
-      onTap: () => _showBookActions(book),
+      onTap: () => _showOfferActions(offer),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
@@ -484,13 +444,17 @@ class _BooksScreenState extends State<BooksScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Book image
+              // Offer image
               ImageHelper.buildImageFromBase64(
-                book.imageBase64,
+                offer.imageBase64,
                 fit: BoxFit.cover,
                 placeholder: Container(
                   color: Colors.grey[200],
-                  child: Icon(Icons.book, size: 48, color: Colors.grey[400]),
+                  child: Icon(
+                    Icons.local_offer,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
                 ),
                 errorWidget: Container(
                   color: Colors.grey[200],
@@ -523,7 +487,7 @@ class _BooksScreenState extends State<BooksScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        book.title,
+                        offer.title,
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -533,13 +497,12 @@ class _BooksScreenState extends State<BooksScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        book.auteur,
+                        '${offer.prix.toStringAsFixed(2)} €',
                         style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 10,
+                          color: Colors.greenAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -556,12 +519,36 @@ class _BooksScreenState extends State<BooksScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: book.available ? Colors.green : Colors.red,
+                    color: offer.available ? Colors.green : Colors.red,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    book.available ? 'متوفر' : 'نفذ',
+                    offer.available ? 'متوفر' : 'منتهي',
                     style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Special offer badge
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'عرض خاص',
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 8,
                       fontWeight: FontWeight.bold,

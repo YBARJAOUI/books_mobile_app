@@ -1,12 +1,18 @@
+import 'package:bookstore_backoffice/screens/offer_screen.dart';
+import 'package:bookstore_backoffice/screens/order_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/home_screen.dart';
 import '../screens/books_screen.dart';
 import '../screens/customers_screen.dart';
 import '../screens/book_form_screen.dart';
 import '../screens/customer_form_screen.dart';
-import '../screens/dashbord.dart'; // Correction: dashbord au lieu de dashboard
+import '../screens/offer_form_screen.dart';
+import '../screens/order_form_screen.dart';
+import '../screens/dashbord.dart';
 import '../models/book.dart';
 import '../models/customer.dart';
+import '../models/offer.dart';
+import '../models/order.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -64,6 +70,50 @@ class AppRouter {
                           ? Customer.fromJson(customerJson)
                           : null;
                   return CustomerFormScreen(customer: customer);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/offers',
+            name: 'offers',
+            builder: (context, state) => const OffersScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                name: 'offer-new',
+                builder: (context, state) => const OfferFormScreen(),
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                name: 'offer-edit',
+                builder: (context, state) {
+                  final offerJson = state.extra as Map<String, dynamic>?;
+                  final offer =
+                      offerJson != null ? Offer.fromJson(offerJson) : null;
+                  return OfferFormScreen(offer: offer);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/orders',
+            name: 'orders',
+            builder: (context, state) => const OrdersScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                name: 'order-new',
+                builder: (context, state) => const OrderFormScreen(),
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                name: 'order-edit',
+                builder: (context, state) {
+                  final orderJson = state.extra as Map<String, dynamic>?;
+                  final order =
+                      orderJson != null ? Order.fromJson(orderJson) : null;
+                  return OrderFormScreen(order: order);
                 },
               ),
             ],

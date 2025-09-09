@@ -13,44 +13,32 @@ class CustomerFormScreen extends StatefulWidget {
 
 class _CustomerFormScreenState extends State<CustomerFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _nomController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
-  final _postalCodeController = TextEditingController();
-  final _countryController = TextEditingController();
 
-  bool _isActive = true;
+  bool _blacklisted = false;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.customer != null) {
-      _firstNameController.text = widget.customer!.firstName;
-      _lastNameController.text = widget.customer!.lastName;
-      _emailController.text = widget.customer!.email;
+      _nomController.text = widget.customer!.nom;
       _phoneController.text = widget.customer!.phoneNumber;
       _addressController.text = widget.customer!.address;
-      _cityController.text = widget.customer!.city ?? '';
-      _postalCodeController.text = widget.customer!.postalCode ?? '';
-      _countryController.text = widget.customer!.country ?? '';
-      _isActive = widget.customer!.isActive;
+      _cityController.text = widget.customer!.city;
+      _blacklisted = widget.customer!.blacklisted;
     }
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _emailController.dispose();
+    _nomController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
     _cityController.dispose();
-    _postalCodeController.dispose();
-    _countryController.dispose();
     super.dispose();
   }
 
@@ -66,21 +54,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     try {
       final customer = Customer(
         id: widget.customer?.id,
-        firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim(),
-        email: _emailController.text.trim(),
+        nom: _nomController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         address: _addressController.text.trim(),
-        city: _cityController.text.trim().isEmpty 
-            ? null 
-            : _cityController.text.trim(),
-        postalCode: _postalCodeController.text.trim().isEmpty 
-            ? null 
-            : _postalCodeController.text.trim(),
-        country: _countryController.text.trim().isEmpty 
-            ? null 
-            : _countryController.text.trim(),
-        isActive: _isActive,
+        city: _cityController.text.trim(),
+        blacklisted: _blacklisted,
       );
 
       if (widget.customer == null) {
@@ -94,17 +72,18 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.customer == null 
-                  ? 'Client créé avec succès'
-                  : 'Client modifié avec succès',
+              widget.customer == null
+                  ? 'تم إنشاء العميل بنجاح'
+                  : 'تم تعديل العميل بنجاح',
             ),
+            backgroundColor: Colors.green,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -118,20 +97,18 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.customer == null ? 'Nouveau Client' : 'Modifier le Client'),
+        title: Text(widget.customer == null ? 'عميل جديد' : 'تعديل العميل'),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveCustomer,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    'Enregistrer',
-                    style: TextStyle(color: Colors.white),
-                  ),
+            child:
+                _isLoading
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Text('حفظ', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -142,162 +119,238 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _firstNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Prénom *',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Le prénom est requis';
-                        }
-                        if (value.trim().length < 2 || value.trim().length > 50) {
-                          return 'Le prénom doit contenir entre 2 et 50 caractères';
-                        }
-                        return null;
-                      },
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      size: 32,
+                      color: Theme.of(context).primaryColor,
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lastNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nom *',
-                        border: OutlineInputBorder(),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.customer == null
+                                ? 'إضافة عميل جديد'
+                                : 'تعديل العميل',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'املأ معلومات العميل',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
+                          ),
+                        ],
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Le nom est requis';
-                        }
-                        if (value.trim().length < 2 || value.trim().length > 50) {
-                          return 'Le nom doit contenir entre 2 et 50 caractères';
-                        }
-                        return null;
-                      },
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Personal Information
+              Text(
+                'المعلومات الشخصية',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+
               TextFormField(
-                controller: _emailController,
+                controller: _nomController,
                 decoration: const InputDecoration(
-                  labelText: 'Email *',
-                  border: OutlineInputBorder(),
+                  labelText: 'الاسم الكامل *',
+                  hintText: 'أدخل الاسم الكامل',
+                  prefixIcon: Icon(Icons.person),
                 ),
-                keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'L\'email est requis';
+                    return 'الاسم مطلوب';
                   }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-                    return 'Format d\'email invalide';
+                  if (value.trim().length < 2 || value.trim().length > 100) {
+                    return 'الاسم يجب أن يحتوي بين 2 و 100 حرف';
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _phoneController,
                 decoration: const InputDecoration(
-                  labelText: 'Téléphone *',
-                  border: OutlineInputBorder(),
+                  labelText: 'رقم الهاتف *',
+                  hintText: 'أدخل رقم الهاتف',
+                  prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Le numéro de téléphone est requis';
+                    return 'رقم الهاتف مطلوب';
                   }
-                  if (!RegExp(r'^[+]?[0-9]{10,15}$').hasMatch(value.trim().replaceAll(' ', ''))) {
-                    return 'Format de téléphone invalide';
+                  if (value.trim().length < 8) {
+                    return 'رقم الهاتف قصير جداً';
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Address Information
+              Text(
+                'معلومات العنوان',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _addressController,
                 decoration: const InputDecoration(
-                  labelText: 'Adresse *',
-                  border: OutlineInputBorder(),
+                  labelText: 'العنوان *',
+                  hintText: 'أدخل العنوان',
+                  prefixIcon: Icon(Icons.location_on),
                 ),
                 maxLines: 2,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'L\'adresse est requise';
+                    return 'العنوان مطلوب';
                   }
                   if (value.trim().length < 5 || value.trim().length > 200) {
-                    return 'L\'adresse doit contenir entre 5 et 200 caractères';
+                    return 'العنوان يجب أن يحتوي بين 5 و 200 حرف';
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _cityController,
+                decoration: const InputDecoration(
+                  labelText: 'المدينة *',
+                  hintText: 'أدخل اسم المدينة',
+                  prefixIcon: Icon(Icons.location_city),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'المدينة مطلوبة';
+                  }
+                  if (value.trim().length > 50) {
+                    return 'اسم المدينة طويل جداً';
+                  }
+                  return null;
+                },
+                textInputAction: TextInputAction.done,
+              ),
+
+              const SizedBox(height: 32),
+
+              // Status
+              Text(
+                'حالة العميل',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SwitchListTile(
+                  title: const Text('عميل محظور'),
+                  subtitle: Text(
+                    _blacklisted
+                        ? 'العميل محظور من النظام'
+                        : 'العميل نشط في النظام',
+                    style: TextStyle(
+                      color: _blacklisted ? Colors.red : Colors.green,
+                    ),
+                  ),
+                  value: _blacklisted,
+                  onChanged: (value) {
+                    setState(() {
+                      _blacklisted = value;
+                    });
+                  },
+                  secondary: Icon(
+                    _blacklisted ? Icons.block : Icons.check_circle,
+                    color: _blacklisted ? Colors.red : Colors.green,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Action buttons
               Row(
                 children: [
                   Expanded(
-                    child: TextFormField(
-                      controller: _cityController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ville',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value != null && value.trim().isNotEmpty && value.trim().length > 50) {
-                          return 'La ville ne peut pas dépasser 50 caractères';
-                        }
-                        return null;
-                      },
+                    child: OutlinedButton(
+                      onPressed:
+                          _isLoading
+                              ? null
+                              : () {
+                                Navigator.of(context).pop();
+                              },
+                      child: const Text('إلغاء'),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: TextFormField(
-                      controller: _postalCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Code postal',
-                        border: OutlineInputBorder(),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveCustomer,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
                       ),
-                      validator: (value) {
-                        if (value != null && value.trim().isNotEmpty && value.trim().length > 20) {
-                          return 'Le code postal ne peut pas dépasser 20 caractères';
-                        }
-                        return null;
-                      },
+                      child:
+                          _isLoading
+                              ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('جاري الحفظ...'),
+                                ],
+                              )
+                              : Text(
+                                widget.customer == null ? 'إضافة' : 'تعديل',
+                              ),
                     ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _countryController,
-                decoration: const InputDecoration(
-                  labelText: 'Pays',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value != null && value.trim().isNotEmpty && value.trim().length > 50) {
-                    return 'Le pays ne peut pas dépasser 50 caractères';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Client actif'),
-                subtitle: const Text('Le client peut-il passer des commandes ?'),
-                value: _isActive,
-                onChanged: (value) {
-                  setState(() {
-                    _isActive = value;
-                  });
-                },
-              ),
             ],
           ),
         ),

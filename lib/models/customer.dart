@@ -55,4 +55,8 @@ class Customer {
     );
   }
 
+  // Helper getters for compatibility
+  String get fullName => nom;
+  bool get isActive => !blacklisted;
+  DateTime? get createdAt => null; // Not available in backend
 }

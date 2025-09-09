@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'http://192.168.50.141:8082/api';
   static const int timeoutSeconds = 30;
 
   static Map<String, String> get headers => {
@@ -187,9 +187,11 @@ class ApiService {
         if (response.body.isNotEmpty) {
           final errorData = jsonDecode(response.body);
           if (errorData is Map) {
-            if (errorData.containsKey('message') && errorData['message'] != null) {
+            if (errorData.containsKey('message') &&
+                errorData['message'] != null) {
               errorMessage = errorData['message'].toString();
-            } else if (errorData.containsKey('error') && errorData['error'] != null) {
+            } else if (errorData.containsKey('error') &&
+                errorData['error'] != null) {
               errorMessage = errorData['error'].toString();
             } else if (errorData.containsKey('details')) {
               errorMessage = errorData['details'].toString();
@@ -208,9 +210,10 @@ class ApiService {
 
   static List<dynamic> handleListResponse(http.Response response) {
     print('Response status: ${response.statusCode}');
-    final bodyPreview = response.body.length > 500 
-        ? '${response.body.substring(0, 500)}...' 
-        : response.body;
+    final bodyPreview =
+        response.body.length > 500
+            ? '${response.body.substring(0, 500)}...'
+            : response.body;
     print('Response body preview: $bodyPreview');
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -259,9 +262,11 @@ class ApiService {
         if (response.body.isNotEmpty) {
           final errorData = jsonDecode(response.body);
           if (errorData is Map) {
-            if (errorData.containsKey('message') && errorData['message'] != null) {
+            if (errorData.containsKey('message') &&
+                errorData['message'] != null) {
               errorMessage = errorData['message'].toString();
-            } else if (errorData.containsKey('error') && errorData['error'] != null) {
+            } else if (errorData.containsKey('error') &&
+                errorData['error'] != null) {
               errorMessage = errorData['error'].toString();
             }
           }
@@ -310,13 +315,17 @@ class ApiService {
   static Future<bool> testConnection() async {
     try {
       print('Testing connection to: $baseUrl/health');
-      final response = await get('/health').timeout(const Duration(seconds: 10));
+      final response = await get(
+        '/health',
+      ).timeout(const Duration(seconds: 10));
       print('Connection test result: ${response.statusCode}');
       return response.statusCode >= 200 && response.statusCode < 300;
     } catch (e) {
       print('Health endpoint failed, trying alternative endpoints...');
       try {
-        final response = await get('/customers').timeout(const Duration(seconds: 5));
+        final response = await get(
+          '/customers',
+        ).timeout(const Duration(seconds: 5));
         print('Customers endpoint test result: ${response.statusCode}');
         return response.statusCode >= 200 && response.statusCode < 500;
       } catch (e2) {
@@ -330,8 +339,8 @@ class ApiService {
     try {
       print('Checking server status...');
       final isConnected = await testConnection();
-      return isConnected 
-          ? 'Serveur accessible sur $baseUrl' 
+      return isConnected
+          ? 'Serveur accessible sur $baseUrl'
           : 'Serveur inaccessible sur $baseUrl';
     } catch (e) {
       return 'Erreur de connexion: ${e.toString().replaceAll('Exception: ', '')}';
@@ -340,16 +349,15 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getConnectionInfo() async {
     final startTime = DateTime.now();
-    
+
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/health'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-      
+      final response = await http
+          .get(Uri.parse('$baseUrl/health'), headers: headers)
+          .timeout(const Duration(seconds: 10));
+
       final endTime = DateTime.now();
       final latency = endTime.difference(startTime).inMilliseconds;
-      
+
       return {
         'connected': response.statusCode >= 200 && response.statusCode < 300,
         'statusCode': response.statusCode,
@@ -360,7 +368,7 @@ class ApiService {
     } catch (e) {
       final endTime = DateTime.now();
       final latency = endTime.difference(startTime).inMilliseconds;
-      
+
       return {
         'connected': false,
         'error': e.toString(),

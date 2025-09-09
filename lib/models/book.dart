@@ -29,7 +29,6 @@ class Book {
     );
   }
 
-
   Map<String, dynamic> toJson() {
     return {
       'title': title,

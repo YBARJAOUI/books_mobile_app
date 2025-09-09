@@ -3,63 +3,45 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import '../models/book.dart';
-import '../services/book_service.dart';
+import '../models/offer.dart';
+import '../services/offer_service.dart';
 
-class BookFormScreen extends StatefulWidget {
-  final Book? book;
+class OfferFormScreen extends StatefulWidget {
+  final Offer? offer;
 
-  const BookFormScreen({super.key, this.book});
+  const OfferFormScreen({super.key, this.offer});
 
   @override
-  State<BookFormScreen> createState() => _BookFormScreenState();
+  State<OfferFormScreen> createState() => _OfferFormScreenState();
 }
 
-class _BookFormScreenState extends State<BookFormScreen> {
+class _OfferFormScreenState extends State<OfferFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _authorController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
 
   File? _selectedImage;
   String? _imageBase64;
 
-  String _selectedCategory = 'رواية';
   bool _isAvailable = true;
   bool _isLoading = false;
-
-  final List<String> _categories = [
-    'رواية',
-    'غير روائي',
-    'علوم',
-    'تاريخ',
-    'فلسفة',
-    'فن',
-    'طبخ',
-    'تكنولوجيا',
-    'صحة',
-    'أطفال',
-  ];
 
   @override
   void initState() {
     super.initState();
-    if (widget.book != null) {
-      _titleController.text = widget.book!.title;
-      _authorController.text = widget.book!.auteur;
-      _descriptionController.text = widget.book!.description ?? '';
-      _priceController.text = widget.book!.prix.toString();
-      _selectedCategory = widget.book!.categorie;
-      _isAvailable = widget.book!.available;
-      _imageBase64 = widget.book!.imageBase64;
+    if (widget.offer != null) {
+      _titleController.text = widget.offer!.title;
+      _descriptionController.text = widget.offer!.description ?? '';
+      _priceController.text = widget.offer!.prix.toString();
+      _isAvailable = widget.offer!.available;
+      _imageBase64 = widget.offer!.imageBase64;
     }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    _authorController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
     super.dispose();
@@ -133,7 +115,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
     );
   }
 
-  Future<void> _saveBook() async {
+  Future<void> _saveOffer() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -143,23 +125,21 @@ class _BookFormScreenState extends State<BookFormScreen> {
     });
 
     try {
-      final book = Book(
+      final offer = Offer(
         title: _titleController.text.trim(),
-        auteur: _authorController.text.trim(),
         description:
             _descriptionController.text.trim().isEmpty
                 ? null
                 : _descriptionController.text.trim(),
         prix: double.parse(_priceController.text.trim()),
-        categorie: _selectedCategory,
         available: _isAvailable,
         imageBase64: _imageBase64,
       );
 
-      if (widget.book == null) {
-        await BookService.createBook(book);
+      if (widget.offer == null) {
+        await OfferService.createOffer(offer);
       } else {
-        await BookService.updateBook(book);
+        await OfferService.updateOffer(offer);
       }
 
       if (mounted) {
@@ -167,9 +147,9 @@ class _BookFormScreenState extends State<BookFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.book == null
-                  ? 'تم إنشاء الكتاب بنجاح'
-                  : 'تم تعديل الكتاب بنجاح',
+              widget.offer == null
+                  ? 'تم إنشاء العرض بنجاح'
+                  : 'تم تعديل العرض بنجاح',
             ),
             backgroundColor: Colors.green,
           ),
@@ -192,12 +172,12 @@ class _BookFormScreenState extends State<BookFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.book == null ? 'كتاب جديد' : 'تعديل الكتاب'),
+        title: Text(widget.offer == null ? 'عرض جديد' : 'تعديل العرض'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: TextButton.icon(
-              onPressed: _isLoading ? null : _saveBook,
+              onPressed: _isLoading ? null : _saveOffer,
               icon:
                   _isLoading
                       ? const SizedBox(
@@ -231,30 +211,26 @@ class _BookFormScreenState extends State<BookFormScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.book,
-                      size: 32,
-                      color: Theme.of(context).primaryColor,
-                    ),
+                    Icon(Icons.local_offer, size: 32, color: Colors.orange),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.book == null
-                                ? 'إضافة كتاب جديد'
-                                : 'تعديل الكتاب',
+                            widget.offer == null
+                                ? 'إضافة عرض خاص جديد'
+                                : 'تعديل العرض الخاص',
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'املأ معلومات الكتاب',
+                            'املأ معلومات العرض الخاص',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.grey[600]),
                           ),
@@ -279,13 +255,13 @@ class _BookFormScreenState extends State<BookFormScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'العنوان *',
-                  hintText: 'أدخل عنوان الكتاب',
+                  labelText: 'عنوان العرض *',
+                  hintText: 'أدخل عنوان العرض',
                   prefixIcon: Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'العنوان مطلوب';
+                    return 'عنوان العرض مطلوب';
                   }
                   if (value.trim().length < 2 || value.trim().length > 200) {
                     return 'العنوان يجب أن يحتوي بين 2 و 200 حرف';
@@ -297,30 +273,10 @@ class _BookFormScreenState extends State<BookFormScreen> {
               const SizedBox(height: 16),
 
               TextFormField(
-                controller: _authorController,
-                decoration: const InputDecoration(
-                  labelText: 'المؤلف *',
-                  hintText: 'أدخل اسم المؤلف',
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'اسم المؤلف مطلوب';
-                  }
-                  if (value.trim().length < 2 || value.trim().length > 100) {
-                    return 'اسم المؤلف يجب أن يحتوي بين 2 و 100 حرف';
-                  }
-                  return null;
-                },
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'الوصف',
-                  hintText: 'أدخل وصف الكتاب (اختياري)',
+                  labelText: 'وصف العرض',
+                  hintText: 'أدخل وصف تفصيلي للعرض (اختياري)',
                   prefixIcon: Icon(Icons.description),
                   alignLabelWithHint: true,
                 ),
@@ -332,7 +288,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
 
               // Image Section
               Text(
-                'صورة الكتاب',
+                'صورة العرض',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -400,9 +356,10 @@ class _BookFormScreenState extends State<BookFormScreen> {
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(
-                  labelText: 'السعر (€) *',
+                  labelText: 'سعر العرض (€) *',
                   hintText: '0.00',
                   prefixIcon: Icon(Icons.euro),
+                  suffixText: 'EUR',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -420,44 +377,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
                   }
                   return null;
                 },
-                textInputAction: TextInputAction.next,
-              ),
-
-              const SizedBox(height: 32),
-
-              // Category
-              Text(
-                'التصنيف',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'الفئة *',
-                  prefixIcon: Icon(Icons.category),
-                ),
-                items:
-                    _categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'الرجاء اختيار فئة';
-                  }
-                  return null;
-                },
+                textInputAction: TextInputAction.done,
               ),
 
               const SizedBox(height: 32),
@@ -477,11 +397,11 @@ class _BookFormScreenState extends State<BookFormScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SwitchListTile(
-                  title: const Text('الكتاب متوفر'),
+                  title: const Text('العرض متوفر'),
                   subtitle: Text(
                     _isAvailable
-                        ? 'الكتاب متوفر للبيع'
-                        : 'الكتاب غير متوفر للبيع',
+                        ? 'العرض متوفر للعملاء'
+                        : 'العرض غير متوفر حالياً',
                     style: TextStyle(
                       color: _isAvailable ? Colors.green : Colors.red,
                     ),
@@ -496,6 +416,45 @@ class _BookFormScreenState extends State<BookFormScreen> {
                     _isAvailable ? Icons.check_circle : Icons.cancel,
                     color: _isAvailable ? Colors.green : Colors.red,
                   ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Special offer info card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.amber, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'عرض خاص',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber[700],
+                            ),
+                          ),
+                          Text(
+                            'هذا العرض سيظهر في قسم العروض الخاصة ويمكن للعملاء الاستفادة منه',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -518,9 +477,9 @@ class _BookFormScreenState extends State<BookFormScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveBook,
+                      onPressed: _isLoading ? null : _saveOffer,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
                       ),
                       child:
@@ -542,7 +501,11 @@ class _BookFormScreenState extends State<BookFormScreen> {
                                   Text('جاري الحفظ...'),
                                 ],
                               )
-                              : Text(widget.book == null ? 'إضافة' : 'تعديل'),
+                              : Text(
+                                widget.offer == null
+                                    ? 'إضافة العرض'
+                                    : 'تعديل العرض',
+                              ),
                     ),
                   ),
                 ],

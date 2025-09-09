@@ -27,6 +27,18 @@ class _HomeScreenState extends State<HomeScreen> {
       route: '/books',
     ),
     NavigationItem(
+      icon: Icons.local_offer_outlined,
+      selectedIcon: Icons.local_offer,
+      label: 'العروض',
+      route: '/offers',
+    ),
+    NavigationItem(
+      icon: Icons.shopping_cart_outlined,
+      selectedIcon: Icons.shopping_cart,
+      label: 'الطلبات',
+      route: '/orders',
+    ),
+    NavigationItem(
       icon: Icons.people_outlined,
       selectedIcon: Icons.people,
       label: 'العملاء',
@@ -63,6 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey[600],
         backgroundColor: Colors.white,
         elevation: 8,
+        selectedLabelStyle: const TextStyle(fontSize: 11),
+        unselectedLabelStyle: const TextStyle(fontSize: 10),
         items:
             _navigationItems.map((item) {
               return BottomNavigationBarItem(
@@ -113,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const Text(
-                  'نظام إدارة المكتبة',
+                  'نظام إدارة شامل للمكتبة',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
@@ -160,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     onTap: () {
                       _onDestinationSelected(index);
-                      Navigator.of(context).pop(); // إغلاق القائمة الجانبية
+                      Navigator.of(context).pop(); // Close drawer
                     },
                   ),
                 );
@@ -182,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 title: Text(appState.currentUser),
-                subtitle: const Text('المدير'),
+                subtitle: const Text('مدير النظام'),
               );
             },
           ),

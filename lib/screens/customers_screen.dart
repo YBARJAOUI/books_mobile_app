@@ -44,10 +44,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
           customers = [];
           _applyFilters();
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في تحميل العملاء: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              'خطأ في تحميل العملاء: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
             action: SnackBarAction(
               label: 'إعادة المحاولة',
@@ -72,15 +74,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
         customers.where((customer) {
           final matchesSearch =
               searchQuery.isEmpty ||
-              customer.firstName.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ||
-              customer.lastName.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ||
-              customer.email.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ||
+              customer.nom.toLowerCase().contains(searchQuery.toLowerCase()) ||
               customer.phoneNumber.toLowerCase().contains(
                 searchQuery.toLowerCase(),
               );
@@ -90,12 +84,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
           return matchesSearch && matchesStatus;
         }).toList();
 
-    // ترتيب بالاسم
-    filteredCustomers.sort(
-      (a, b) => '${a.firstName} ${a.lastName}'.compareTo(
-        '${b.firstName} ${b.lastName}',
-      ),
-    );
+    // Sort by name
+    filteredCustomers.sort((a, b) => a.nom.compareTo(b.nom));
   }
 
   Future<void> _deleteCustomer(int id) async {
@@ -120,10 +110,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text(
-                  'حذف',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: const Text('حذف', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -229,9 +216,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               radius: 30,
               backgroundColor: customer.isActive ? Colors.green : Colors.grey,
               child: Text(
-                customer.firstName.isNotEmpty
-                    ? customer.firstName[0].toUpperCase()
-                    : '?',
+                customer.nom.isNotEmpty ? customer.nom[0].toUpperCase() : '?',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -261,7 +246,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      customer.isActive ? 'نشط' : 'غير نشط',
+                      customer.isActive ? 'نشط' : 'محظور',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -275,25 +260,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
           ],
         ),
         const SizedBox(height: 24),
-        _buildDetailItem(Icons.email, 'Email', customer.email),
+        _buildDetailItem(Icons.person, 'الاسم', customer.nom),
         _buildDetailItem(Icons.phone, 'هاتف', customer.phoneNumber),
         _buildDetailItem(Icons.location_on, 'عنوان', customer.address),
-        if (customer.city != null)
-          _buildDetailItem(Icons.location_city, 'مدينة', customer.city!),
-        if (customer.postalCode != null)
-          _buildDetailItem(
-            Icons.local_post_office,
-            'الرمز البريدي',
-            customer.postalCode!,
-          ),
-        if (customer.country != null)
-          _buildDetailItem(Icons.flag, 'بلد', customer.country!),
-        if (customer.createdAt != null)
-          _buildDetailItem(
-            Icons.calendar_today,
-            'تاريخ الإنشاء',
-            '${customer.createdAt!.day}/${customer.createdAt!.month}/${customer.createdAt!.year}',
-          ),
+        _buildDetailItem(Icons.location_city, 'مدينة', customer.city),
         const SizedBox(height: 20),
         Row(
           children: [
@@ -405,7 +375,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   Widget _buildHeaderSection(int activeCustomers, int inactiveCustomers) {
     return Container(
-      padding: ResponsiveSpacing.getAllPadding(context),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius:
@@ -423,13 +393,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
             tablet: _buildDesktopStats(activeCustomers, inactiveCustomers),
             desktop: _buildDesktopStats(activeCustomers, inactiveCustomers),
           ),
-          SizedBox(height: ResponsiveSpacing.md),
+          const SizedBox(height: 16),
           ResponsiveLayout(
             mobile: _buildMobileFilters(),
             tablet: _buildDesktopFilters(),
             desktop: _buildDesktopFilters(),
           ),
-          SizedBox(height: ResponsiveSpacing.sm),
+          const SizedBox(height: 8),
           _buildStatsAndActions(),
         ],
       ),
@@ -448,7 +418,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 Colors.blue,
               ),
             ),
-            SizedBox(width: ResponsiveSpacing.sm),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildStatCard(
                 'النشطين',
@@ -458,12 +428,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
             ),
           ],
         ),
-        SizedBox(height: ResponsiveSpacing.sm),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: _buildStatCard(
-                'غير النشطين',
+                'المحظورين',
                 inactiveCustomers.toString(),
                 Colors.orange,
               ),
@@ -480,23 +450,23 @@ class _CustomersScreenState extends State<CustomersScreen> {
       children: [
         Expanded(
           child: _buildStatCard(
-            'Total',
+            'الإجمالي',
             customers.length.toString(),
             Colors.blue,
           ),
         ),
-        SizedBox(width: ResponsiveSpacing.sm),
+        const SizedBox(width: 8),
         Expanded(
           child: _buildStatCard(
-            'Actifs',
+            'النشطين',
             activeCustomers.toString(),
             Colors.green,
           ),
         ),
-        SizedBox(width: ResponsiveSpacing.sm),
+        const SizedBox(width: 8),
         Expanded(
           child: _buildStatCard(
-            'Inactifs',
+            'المحظورين',
             inactiveCustomers.toString(),
             Colors.orange,
           ),
@@ -507,14 +477,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   Widget _buildStatCard(String label, String value, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: ResponsiveSpacing.sm,
-        horizontal: ResponsiveSpacing.md,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         children: [
@@ -544,7 +511,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       children: [
         TextField(
           decoration: InputDecoration(
-            hintText: 'ابحث بالاسم أو البريد الإلكتروني أو الهاتف...',
+            hintText: 'ابحث بالاسم أو الهاتف...',
             prefixIcon: const Icon(Icons.search),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
@@ -557,7 +524,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             });
           },
         ),
-        SizedBox(height: ResponsiveSpacing.sm),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
@@ -571,7 +538,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   });
                 },
                 backgroundColor: Colors.white,
-                selectedColor: Colors.green.withValues(alpha: 0.2),
+                selectedColor: Colors.green.withOpacity(0.2),
                 checkmarkColor: Colors.green,
               ),
             ),
@@ -588,7 +555,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           flex: 3,
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'ابحث بالاسم أو البريد الإلكتروني أو الهاتف...',
+              hintText: 'ابحث بالاسم أو الهاتف...',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -604,9 +571,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
             },
           ),
         ),
-        SizedBox(width: ResponsiveSpacing.md),
+        const SizedBox(width: 16),
         FilterChip(
-          label: const Text('Actifs uniquement'),
+          label: const Text('النشطين فقط'),
           selected: showActiveOnly,
           onSelected: (selected) {
             setState(() {
@@ -615,7 +582,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             });
           },
           backgroundColor: Colors.white,
-          selectedColor: Colors.green.withValues(alpha: 0.2),
+          selectedColor: Colors.green.withOpacity(0.2),
           checkmarkColor: Colors.green,
         ),
       ],
@@ -696,20 +663,18 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   Widget _buildCustomersList() {
     return ListView.builder(
-      padding: ResponsiveSpacing.getAllPadding(context),
+      padding: const EdgeInsets.all(16),
       itemCount: filteredCustomers.length,
       itemBuilder: (context, index) {
         final customer = filteredCustomers[index];
         return Card(
-          margin: EdgeInsets.only(bottom: ResponsiveSpacing.sm),
+          margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
-            contentPadding: EdgeInsets.all(ResponsiveSpacing.md),
+            contentPadding: const EdgeInsets.all(16),
             leading: CircleAvatar(
               backgroundColor: customer.isActive ? Colors.green : Colors.grey,
               child: Text(
-                customer.firstName.isNotEmpty
-                    ? customer.firstName[0].toUpperCase()
-                    : '?',
+                customer.nom.isNotEmpty ? customer.nom[0].toUpperCase() : '?',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -724,20 +689,6 @@ class _CustomersScreenState extends State<CustomersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.email, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        customer.email,
-                        style: TextStyle(color: Colors.grey[700]),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
                 Row(
                   children: [
                     Icon(Icons.phone, size: 16, color: Colors.grey[600]),
@@ -759,7 +710,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    customer.isActive ? 'Actif' : 'Inactif',
+                    customer.isActive ? 'نشط' : 'محظور',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -798,10 +749,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         children: [
                           Icon(Icons.delete, color: Colors.red),
                           SizedBox(width: 8),
-                          Text(
-                            'حذف',
-                            style: TextStyle(color: Colors.red),
-                          ),
+                          Text('حذف', style: TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),
@@ -832,12 +780,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   Widget _buildCustomersGrid(int columns) {
     return GridView.builder(
-      padding: ResponsiveSpacing.getAllPadding(context),
+      padding: const EdgeInsets.all(16),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,
         childAspectRatio: 1.2,
-        crossAxisSpacing: ResponsiveSpacing.md,
-        mainAxisSpacing: ResponsiveSpacing.md,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
       ),
       itemCount: filteredCustomers.length,
       itemBuilder: (context, index) {
@@ -847,7 +795,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             onTap: () => _showCustomerDetails(customer),
             borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: EdgeInsets.all(ResponsiveSpacing.md),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -856,8 +804,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     backgroundColor:
                         customer.isActive ? Colors.green : Colors.grey,
                     child: Text(
-                      customer.firstName.isNotEmpty
-                          ? customer.firstName[0].toUpperCase()
+                      customer.nom.isNotEmpty
+                          ? customer.nom[0].toUpperCase()
                           : '?',
                       style: const TextStyle(
                         color: Colors.white,
@@ -866,7 +814,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: ResponsiveSpacing.sm),
+                  const SizedBox(height: 8),
                   Text(
                     customer.fullName,
                     style: const TextStyle(
@@ -877,15 +825,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: ResponsiveSpacing.xs),
+                  const SizedBox(height: 4),
                   Text(
-                    customer.email,
+                    customer.phoneNumber,
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: ResponsiveSpacing.sm),
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -896,7 +844,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      customer.isActive ? 'نشط' : 'غير نشط',
+                      customer.isActive ? 'نشط' : 'محظور',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
