@@ -1,8 +1,11 @@
+// lib/screens/order_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/order.dart';
+import '../models/order_item.dart';
 import '../services/order_service.dart';
 import '../utils/responsive_layout.dart';
+import '../utils/image_helper.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -17,6 +20,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   bool isLoading = false;
   String searchQuery = '';
   String selectedStatus = 'الكل';
+  String selectedType = 'الكل';
 
   final List<String> statusFilters = [
     'الكل',
@@ -26,6 +30,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
     'تم التسليم',
     'ملغي',
   ];
+
+  final List<String> typeFilters = ['الكل', 'طلب كتب', 'عرض خاص', 'طلب مختلط'];
 
   @override
   void initState() {
@@ -68,13 +74,20 @@ class _OrdersScreenState extends State<OrdersScreen> {
               order.customerName.toLowerCase().contains(
                 searchQuery.toLowerCase(),
               ) ||
-              order.id.toString().contains(searchQuery);
+              order.id.toString().contains(searchQuery) ||
+              order.detailedItemsSummary.toLowerCase().contains(
+                searchQuery.toLowerCase(),
+              );
 
           final matchesStatus =
               selectedStatus == 'الكل' ||
               order.statusInArabic == selectedStatus;
 
-          return matchesSearch && matchesStatus;
+          final matchesType =
+              selectedType == 'الكل' ||
+              order.orderTypeDescription == selectedType;
+
+          return matchesSearch && matchesStatus && matchesType;
         }).toList();
 
     // Sort by creation date (newest first)
@@ -210,6 +223,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Widget _buildOrderDetailsContent(Order order) {
+    final analysis = order.contentAnalysis;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -236,7 +251,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     ),
                   ),
                   Text(
-                    order.formattedDate,
+                    '${order.formattedDate} - ${order.orderTypeDescription}',
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ],
@@ -247,27 +262,113 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
         const SizedBox(height: 24),
 
-        // Status
-        _buildDetailSection(
-          'حالة الطلب',
-          Icons.info,
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: order.statusColor,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              order.statusInArabic,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+        // Order Type and Status
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailSection(
+                'نوع الطلب',
+                order.orderTypeIcon,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: order.orderTypeColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    order.orderTypeDescription,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDetailSection(
+                'حالة الطلب',
+                Icons.info,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: order.statusColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    order.statusInArabic,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // Order Content Details
+        _buildDetailSection(
+          'محتويات الطلب',
+          Icons.inventory,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Summary stats
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem(
+                      'إجمالي العناصر',
+                      '${order.totalItems}',
+                      Icons.inventory_2,
+                    ),
+                    _buildStatItem(
+                      'قيمة الطلب',
+                      order.formattedTotal,
+                      Icons.attach_money,
+                    ),
+                    if (analysis['bookCount'] > 0)
+                      _buildStatItem(
+                        'الكتب',
+                        '${analysis['bookCount']}',
+                        Icons.menu_book,
+                      ),
+                    if (analysis['offerCount'] > 0)
+                      _buildStatItem(
+                        'العروض',
+                        '${analysis['offerCount']}',
+                        Icons.local_offer,
+                      ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Items list
+              ...order.orderItems.map((item) => _buildOrderItemCard(item)),
+            ],
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         // Customer Info
         if (order.client != null)
@@ -277,32 +378,34 @@ class _OrdersScreenState extends State<OrdersScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  order.client!.nom,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                _buildInfoRow(Icons.person, 'الاسم', order.client!.nom),
+                _buildInfoRow(Icons.phone, 'الهاتف', order.client!.phoneNumber),
+                _buildInfoRow(
+                  Icons.location_on,
+                  'العنوان',
+                  order.client!.address,
                 ),
-                const SizedBox(height: 4),
-                Text('الهاتف: ${order.client!.phoneNumber}'),
-                Text('العنوان: ${order.client!.address}'),
-                Text('المدينة: ${order.client!.city}'),
+                _buildInfoRow(
+                  Icons.location_city,
+                  'المدينة',
+                  order.client!.city,
+                ),
               ],
             ),
           ),
 
         const SizedBox(height: 24),
 
-        // Status update buttons
+        // Actions
         Text(
-          'تحديث حالة الطلب',
+          'إجراءات',
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
 
+        // Status update buttons
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -328,7 +431,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   .toList(),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
 
         // Delete button
         SizedBox(
@@ -346,6 +449,163 @@ class _OrdersScreenState extends State<OrdersScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOrderItemCard(OrderItem item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          // Item image
+          Container(
+            width: 60,
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey[200],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: ImageHelper.buildImageFromBase64(
+                item.book.imageBase64,
+                fit: BoxFit.cover,
+                placeholder: Container(
+                  color:
+                      item.isOffer
+                          ? Colors.orange.shade100
+                          : Colors.blue.shade100,
+                  child: Icon(
+                    item.isOffer ? Icons.local_offer : Icons.menu_book,
+                    color: item.isOffer ? Colors.orange : Colors.blue,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Item details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.displayTitle,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: item.isOffer ? Colors.orange : Colors.blue,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        item.typeInArabic,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  item.displayAuthor,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                ),
+
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    Text(
+                      'الكمية: ${item.quantity}',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          item.formattedTotalPrice,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                            fontSize: 16,
+                          ),
+                        ),
+                        if (item.hasDiscount)
+                          Text(
+                            'خصم ${item.discountPercentage.toStringAsFixed(0)}%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green.shade600,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.blue, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w500)),
+          Expanded(
+            child: Text(value, style: TextStyle(color: Colors.grey[700])),
+          ),
+        ],
+      ),
     );
   }
 
@@ -369,6 +629,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ),
         const SizedBox(height: 8),
         content,
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -461,10 +722,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
           Row(
             children: [
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'ابحث برقم الطلب أو اسم العميل...',
+                    hintText: 'ابحث برقم الطلب، اسم العميل أو المحتوى...',
                     prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -485,6 +746,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 child: DropdownButtonFormField<String>(
                   value: selectedStatus,
                   decoration: InputDecoration(
+                    labelText: 'الحالة',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -505,6 +767,34 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   onChanged: (value) {
                     setState(() {
                       selectedStatus = value!;
+                      _applyFilters();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: InputDecoration(
+                    labelText: 'النوع',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items:
+                      typeFilters.map((type) {
+                        return DropdownMenuItem(value: type, child: Text(type));
+                      }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedType = value!;
                       _applyFilters();
                     });
                   },
@@ -596,7 +886,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              searchQuery.isNotEmpty || selectedStatus != 'الكل'
+              searchQuery.isNotEmpty ||
+                      selectedStatus != 'الكل' ||
+                      selectedType != 'الكل'
                   ? 'لم يتم العثور على أي طلب بهذه المعايير'
                   : 'لا توجد طلبات',
               style: Theme.of(
@@ -635,6 +927,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header row
               Row(
                 children: [
                   Container(
@@ -654,12 +947,30 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'طلب رقم ${order.id}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              'طلب رقم ${order.id}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              order.orderTypeIcon,
+                              size: 16,
+                              color: order.orderTypeColor,
+                            ),
+                            Text(
+                              order.orderTypeDescription,
+                              style: TextStyle(
+                                color: order.orderTypeColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                         Text(
                           'العميل: ${order.customerName}',
@@ -688,7 +999,52 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 12),
+
+              // Content summary
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.inventory,
+                          size: 16,
+                          color: Colors.blue[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'المحتوى:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      order.detailedItemsSummary,
+                      style: const TextStyle(fontSize: 13),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Footer row
               Row(
                 children: [
                   Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
@@ -697,15 +1053,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     order.formattedDate,
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
+                  const SizedBox(width: 16),
+                  Icon(
+                    Icons.shopping_basket,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${order.totalItems} عنصر',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
                   const Spacer(),
-                  if (order.client != null) ...[
-                    Icon(Icons.phone, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      order.client!.phoneNumber,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  Text(
+                    order.formattedTotal,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                      fontSize: 16,
                     ),
-                  ],
+                  ),
                 ],
               ),
             ],
